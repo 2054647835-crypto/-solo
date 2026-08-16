@@ -1,0 +1,10 @@
+# 默认忽略 D:\赵 下的所有内容，避免把私人文件夹扫进简历仓库
+*
+
+# 仅保留简历项目相关文件
+!.gitignore
+!index.html
+!content.json
+!README.md
+!assets/
+!assets/**
