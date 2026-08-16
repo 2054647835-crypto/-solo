@@ -1,0 +1,237 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>作品上传 · 简历管理</title>
+<style>
+:root{
+  --bg:#f5f5f7; --bg-card:#ffffff; --text:#1d1d1f; --text-muted:#6e6e73;
+  --border:#d2d2d7; --primary:#0071e3; --primary-hover:#0077ed;
+  --radius:18px; --radius-sm:12px; --shadow:0 2px 10px rgba(0,0,0,.06);
+}
+@media (prefers-color-scheme: dark){
+  :root{--bg:#000;--bg-card:#1c1c1e;--text:#f5f5f7;--text-muted:#a1a1a6;--border:#38383a;--primary:#0a84ff;}
+}
+*{box-sizing:border-box;}
+body{margin:0;font-family:-apple-system,BlinkMacSystemFont,"Segoe UI","PingFang SC","Microsoft YaHei",sans-serif;background:var(--bg);color:var(--text);padding:32px 16px;line-height:1.6;}
+.wrap{max-width:760px;margin:0 auto;}
+h1{font-size:1.8rem;font-weight:700;margin:0 0 4px;}
+.sub{color:var(--text-muted);margin:0 0 28px;font-size:.95rem;}
+.card{background:var(--bg-card);border:1px solid var(--border);border-radius:var(--radius);padding:22px 24px;margin-bottom:20px;box-shadow:var(--shadow);}
+.card h2{font-size:1.15rem;margin:0 0 14px;font-weight:600;}
+label{display:block;font-size:.85rem;color:var(--text-muted);margin:12px 0 6px;}
+input[type=text],input[type=password]{width:100%;padding:11px 14px;border:1px solid var(--border);border-radius:var(--radius-sm);background:var(--bg);color:var(--text);font-size:.95rem;font-family:inherit;}
+.btn{display:inline-flex;align-items:center;justify-content:center;gap:8px;padding:11px 20px;border:none;border-radius:var(--radius-sm);background:var(--primary);color:#fff;font-size:.95rem;font-weight:500;cursor:pointer;transition:background .2s,transform .1s;font-family:inherit;}
+.btn:hover{background:var(--primary-hover);}
+.btn:active{transform:scale(.97);}
+.btn.sec{background:var(--bg);color:var(--text);border:1px solid var(--border);}
+.row{display:flex;gap:12px;flex-wrap:wrap;align-items:center;}
+.slots{display:grid;grid-template-columns:1fr 1fr;gap:14px;}
+.slot{background:var(--bg);border:1px solid var(--border);border-radius:var(--radius-sm);padding:16px;}
+.slot h3{margin:0 0 4px;font-size:1rem;font-weight:600;}
+.slot p{margin:0 0 12px;font-size:.8rem;color:var(--text-muted);}
+.log{background:#0a0a0a;color:#0f0;border-radius:var(--radius-sm);padding:14px;font-family:ui-monospace,Menlo,monospace;font-size:.8rem;white-space:pre-wrap;max-height:240px;overflow:auto;margin-top:8px;}
+.hint{font-size:.82rem;color:var(--text-muted);margin-top:8px;}
+a{color:var(--primary);}
+@media(max-width:560px){.slots{grid-template-columns:1fr;}}
+</style>
+</head>
+<body>
+<div class="wrap">
+  <h1>作品上传中心</h1>
+  <p class="sub">点哪个栏目的按钮，作品就进哪个栏目——<b>分类绝不会错</b>。所有内容直接存进你的 GitHub 仓库，别人打开简历链接就能看到。</p>
+
+  <div class="card">
+    <h2>① 连接你的 GitHub 仓库</h2>
+    <label>GitHub 用户名</label>
+    <input id="owner" type="text" placeholder="例如 zhanghan">
+    <label>仓库名</label>
+    <input id="repo" type="text" placeholder="例如 resume">
+    <label>访问令牌 Token</label>
+    <input id="token" type="password" placeholder="ghp_... 或 github_pat_...">
+    <p class="hint">Token 只存在你这个浏览器里，不会发给任何人。生成时勾选 <b>repo</b> 权限即可。</p>
+    <div class="row" style="margin-top:14px">
+      <button class="btn" id="saveCfg">保存并连接</button>
+      <span id="cfgStatus"></span>
+    </div>
+  </div>
+
+  <div class="card">
+    <h2>② 头像</h2>
+    <div class="row">
+      <button class="btn sec" id="upAvatar">选择头像图片</button>
+      <input type="file" id="avatarFile" accept="image/*" hidden>
+    </div>
+    <p class="hint">建议正方形，上传后简历首页显示。</p>
+  </div>
+
+  <div class="card">
+    <h2>③ 作品栏目（点哪个传哪个）</h2>
+    <div class="slots">
+      <div class="slot"><h3>AI 视频</h3><p>→ assets/ai-video/</p><button class="btn sec upslot" data-slot="ai-video">上传视频</button><input type="file" class="slotfile" data-slot="ai-video" accept="video/*,image/*" multiple hidden></div>
+      <div class="slot"><h3>AI 海报设计</h3><p>→ assets/ai-poster/</p><button class="btn sec upslot" data-slot="ai-poster">上传海报</button><input type="file" class="slotfile" data-slot="ai-poster" accept="image/*" multiple hidden></div>
+      <div class="slot"><h3>考公打卡小程序</h3><p>→ assets/ai-kaogong/</p><button class="btn sec upslot" data-slot="ai-kaogong">上传截图</button><input type="file" class="slotfile" data-slot="ai-kaogong" accept="image/*" multiple hidden></div>
+      <div class="slot"><h3>个人照片墙</h3><p>→ assets/photo-wall/</p><button class="btn sec upslot" data-slot="photo-wall">上传照片</button><input type="file" class="slotfile" data-slot="photo-wall" accept="image/*" multiple hidden></div>
+    </div>
+  </div>
+
+  <div class="card">
+    <h2>④ 外链作品（填你的主页链接）</h2>
+    <label>抖音</label><input class="link" data-i="0" type="text" placeholder="https://...">
+    <label>小红书</label><input class="link" data-i="1" type="text" placeholder="https://...">
+    <label>B站</label><input class="link" data-i="2" type="text" placeholder="https://...">
+    <label>视频号</label><input class="link" data-i="3" type="text" placeholder="https://...">
+    <div class="row" style="margin-top:14px"><button class="btn" id="saveLinks">保存外链</button></div>
+  </div>
+
+  <div class="card">
+    <h2>操作日志</h2>
+    <div class="log" id="log">等待操作…</div>
+    <p class="hint">上传完成后，GitHub Pages 通常有 1–3 分钟缓存，稍等再刷新简历页即可看到新内容。</p>
+  </div>
+</div>
+<script>
+const $ = s => document.querySelector(s);
+const $$ = s => [...document.querySelectorAll(s)];
+const logEl = $('#log');
+function log(msg, cls){ logEl.textContent += (cls ? ('['+cls+'] ') : '') + msg + '\n'; logEl.scrollTop = logEl.scrollHeight; }
+
+function utf8ToB64(str){
+  return btoa(encodeURIComponent(str).replace(/%([0-9A-F]{2})/g, (_,p)=>String.fromCharCode(parseInt(p,16))));
+}
+function fileToB64(file){
+  return new Promise((res,rej)=>{
+    const r = new FileReader();
+    r.onload = () => res(r.result.split(',')[1]);
+    r.onerror = rej;
+    r.readAsDataURL(file);
+  });
+}
+function encPath(p){ return p.split('/').map(encodeURIComponent).join('/'); }
+
+let CFG = { owner:'', repo:'', token:'' };
+try { const s = localStorage.getItem('gh_cfg'); if(s) CFG = JSON.parse(s); } catch(e){}
+$('#owner').value = CFG.owner; $('#repo').value = CFG.repo; $('#token').value = CFG.token;
+
+async function gh(path, opts={}){
+  const url = `https://api.github.com/repos/${CFG.owner}/${CFG.repo}/contents/${encPath(path)}`;
+  const res = await fetch(url, {
+    method: opts.method || 'GET',
+    headers: Object.assign({
+      Authorization: 'Bearer ' + CFG.token,
+      Accept: 'application/vnd.github+json'
+    }, opts.headers||{}),
+    body: opts.body ? opts.body : undefined
+  });
+  const txt = await res.text();
+  if(!res.ok){ const e = new Error(`GitHub ${res.status}: ${txt.slice(0,200)}`); e.status = res.status; throw e; }
+  return txt ? JSON.parse(txt) : {};
+}
+async function getFile(path){
+  try { return await gh(path); } catch(e){ if(e.status===404) return null; throw e; }
+}
+async function putFile(path, contentB64, message){
+  const existing = await getFile(path);
+  const body = { message, content: contentB64 };
+  if(existing) body.sha = existing.sha;
+  return gh(path, { method:'PUT', body: JSON.stringify(body) });
+}
+
+const EMPTY_MANIFEST = {
+  avatar:'',
+  slots:{ 'ai-video':[], 'ai-poster':[], 'ai-kaogong':[], 'photo-wall':[] },
+  links:[
+    {name:'抖音',url:'',icon:'🎵'},
+    {name:'小红书',url:'',icon:'📕'},
+    {name:'B站',url:'',icon:'📺'},
+    {name:'视频号',url:'',icon:'💬'}
+  ]
+};
+
+async function loadManifest(){
+  const d = await getFile('content.js');
+  if(!d) return JSON.parse(JSON.stringify(EMPTY_MANIFEST));
+  const text = atob(d.content);
+  const m = text.match(/window\.__MANIFEST__\s*=\s*([\s\S]*?)\s*;\s*$/);
+  if(!m) return JSON.parse(JSON.stringify(EMPTY_MANIFEST));
+  return new Function('return ' + m[1])();
+}
+async function saveManifest(m){
+  const d = await getFile('content.js');
+  const header = d ? atob(d.content).split('window.__MANIFEST__')[0] : '';
+  const newText = header + 'window.__MANIFEST__ = ' + JSON.stringify(m, null, 2) + ';\n';
+  await putFile('content.js', utf8ToB64(newText), 'update manifest');
+}
+
+$('#saveCfg').onclick = async () => {
+  CFG = { owner:$('#owner').value.trim(), repo:$('#repo').value.trim(), token:$('#token').value.trim() };
+  localStorage.setItem('gh_cfg', JSON.stringify(CFG));
+  $('#cfgStatus').textContent = '连接中…';
+  try {
+    await gh('');
+    $('#cfgStatus').textContent = '✅ 连接成功';
+    log(`已连接 ${CFG.owner}/${CFG.repo}`, 'ok');
+    try {
+      const m = await loadManifest();
+      $$('.link').forEach(inp=>{ const i=+inp.dataset.i; if(m.links[i]) inp.value = m.links[i].url||''; });
+      log('已载入仓库现有内容','ok');
+    } catch(e){ log('载入清单失败：'+e.message,'err'); }
+  } catch(e){ $('#cfgStatus').textContent='❌ 失败'; log(e.message,'err'); }
+};
+
+$('#upAvatar').onclick = () => $('#avatarFile').click();
+$('#avatarFile').onchange = async (e) => {
+  const f = e.target.files[0]; if(!f) return;
+  log(`上传头像: ${f.name}`);
+  try{
+    const b64 = await fileToB64(f);
+    const path = `assets/avatar/${f.name}`;
+    await putFile(path, b64, `avatar ${f.name}`);
+    const m = await loadManifest();
+    m.avatar = path;
+    await saveManifest(m);
+    log('头像已更新','ok');
+  }catch(err){ log(err.message,'err'); }
+  e.target.value = '';
+};
+
+$$('.upslot').forEach(b=>{
+  b.onclick = () => $(`.slotfile[data-slot="${b.dataset.slot}"]`).click();
+});
+$$('.slotfile').forEach(inp=>{
+  inp.onchange = async (e) => {
+    const slot = inp.dataset.slot;
+    const files = [...e.target.files];
+    if(!files.length) return;
+    log(`上传「${slot}」：${files.length} 个文件`);
+    try{
+      const m = await loadManifest();
+      if(!m.slots[slot]) m.slots[slot] = [];
+      for(const f of files){
+        const b64 = await fileToB64(f);
+        const path = `assets/${slot}/${f.name}`;
+        await putFile(path, b64, `${slot} ${f.name}`);
+        if(!m.slots[slot].includes(path)) m.slots[slot].push(path);
+        log(`  ✓ ${f.name}`, 'ok');
+      }
+      await saveManifest(m);
+      log(`「${slot}」上传完成，清单已更新`, 'ok');
+    }catch(err){ log(err.message,'err'); }
+    e.target.value = '';
+  };
+});
+
+$('#saveLinks').onclick = async () => {
+  try{
+    const m = await loadManifest();
+    $$('.link').forEach(inp=>{ const i=+inp.dataset.i; if(inp.value.trim()) m.links[i].url = inp.value.trim(); });
+    await saveManifest(m);
+    log('外链已保存','ok');
+  }catch(err){ log(err.message,'err'); }
+};
+
+if(CFG.token){ $('#saveCfg').click(); }
+</script>
+</body>
+</html>
