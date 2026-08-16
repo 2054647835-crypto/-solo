@@ -5278,4 +5278,22 @@ img {
 
 
 <div class="light"></div>
+  <!-- 已发布内容：清单(content.js) + 渲染器(manifest.js)。部署后所有人可见 -->
+  <script src="content.js"></script>
+  <script src="manifest.js"></script>
+  <style>
+    .manifest-filled{grid-column:1/-1;display:grid!important;grid-template-columns:repeat(auto-fill,minmax(150px,1fr));gap:12px;aspect-ratio:auto!important;background:transparent!important;padding:0;border:0;box-shadow:none}
+    .manifest-card{position:relative;aspect-ratio:4/3}
+    .manifest-lightbox{position:fixed;inset:0;display:none;align-items:center;justify-content:center;z-index:99999}
+    .manifest-lightbox .ml-backdrop{position:absolute;inset:0;background:rgba(0,0,0,.88)}
+    .manifest-lightbox .ml-stage{position:relative;z-index:1;max-width:92vw;max-height:90vh;display:flex;align-items:center;justify-content:center}
+    .manifest-lightbox .ml-content img,.manifest-lightbox .ml-content video{max-width:90vw;max-height:82vh;border-radius:12px;box-shadow:0 20px 60px rgba(0,0,0,.5)}
+    .manifest-lightbox .ml-close{position:absolute;top:-44px;right:0;width:36px;height:36px;border:0;border-radius:50%;background:rgba(255,255,255,.15);color:#fff;font-size:22px;line-height:1;cursor:pointer}
+    .manifest-lightbox .ml-close:hover{background:rgba(255,255,255,.3)}
+    .manifest-lightbox .ml-prev,.manifest-lightbox .ml-next{position:absolute;top:50%;transform:translateY(-50%);width:44px;height:44px;border:0;border-radius:50%;background:rgba(255,255,255,.15);color:#fff;font-size:26px;cursor:pointer}
+    .manifest-lightbox .ml-prev{left:-64px}
+    .manifest-lightbox .ml-next{right:-64px}
+    .manifest-lightbox .ml-caption{position:absolute;bottom:-34px;left:0;right:0;text-align:center;color:#fff;font-size:.9rem}
+    @media(max-width:680px){.manifest-lightbox .ml-prev{left:8px}.manifest-lightbox .ml-next{right:8px}.manifest-lightbox .ml-close{top:-40px}}
+  </style>
 </body></html>

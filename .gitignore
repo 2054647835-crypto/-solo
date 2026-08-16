@@ -4,7 +4,8 @@
 # 仅保留简历项目相关文件
 !.gitignore
 !index.html
-!content.json
+!content.js
+!manifest.js
 !README.md
 !assets/
 !assets/**
