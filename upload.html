@@ -7,7 +7,7 @@
 <style>
 :root{
   --bg:#f5f5f7; --bg-card:#ffffff; --text:#1d1d1f; --text-muted:#6e6e73;
-  --border:#d2d2d7; --primary:#0071e3; --primary-hover:#0077ed;
+  --border:#d2d2d7; --primary:#0071e3; --primary-hover:#0077ed; --danger:#ff3b30;
   --radius:18px; --radius-sm:12px; --shadow:0 2px 10px rgba(0,0,0,.06);
 }
 @media (prefers-color-scheme: dark){
@@ -25,6 +25,7 @@ input[type=text],input[type=password]{width:100%;padding:11px 14px;border:1px so
 .btn{display:inline-flex;align-items:center;justify-content:center;gap:8px;padding:11px 20px;border:none;border-radius:var(--radius-sm);background:var(--primary);color:#fff;font-size:.95rem;font-weight:500;cursor:pointer;transition:background .2s,transform .1s;font-family:inherit;}
 .btn:hover{background:var(--primary-hover);}
 .btn:active{transform:scale(.97);}
+.btn:disabled{opacity:.5;cursor:not-allowed;}
 .btn.sec{background:var(--bg);color:var(--text);border:1px solid var(--border);}
 .row{display:flex;gap:12px;flex-wrap:wrap;align-items:center;}
 .slots{display:grid;grid-template-columns:1fr 1fr;gap:14px;}
@@ -33,6 +34,8 @@ input[type=text],input[type=password]{width:100%;padding:11px 14px;border:1px so
 .slot p{margin:0 0 12px;font-size:.8rem;color:var(--text-muted);}
 .log{background:#0a0a0a;color:#0f0;border-radius:var(--radius-sm);padding:14px;font-family:ui-monospace,Menlo,monospace;font-size:.8rem;white-space:pre-wrap;max-height:240px;overflow:auto;margin-top:8px;}
 .hint{font-size:.82rem;color:var(--text-muted);margin-top:8px;}
+.warn{background:#fff3f3;border:1px solid #ff3b30;color:#c00;padding:16px;border-radius:var(--radius-sm);margin-bottom:20px;font-size:.9rem;line-height:1.6;}
+.warn a{color:#c00;font-weight:600;}
 a{color:var(--primary);}
 @media(max-width:560px){.slots{grid-template-columns:1fr;}}
 </style>
@@ -110,12 +113,21 @@ function fileToB64(file){
 }
 function encPath(p){ return p.split('/').map(encodeURIComponent).join('/'); }
 
+// ===== 协议检测：不能直接双击 file:// 打开 =====
+if(location.protocol === 'file:'){
+  const w = document.createElement('div');
+  w.className = 'warn';
+  w.innerHTML = '⚠️ <b>不能直接双击打开本文件来上传</b><br>浏览器（file:// 方式）会拦截向 GitHub 的网络请求，导致「无法上传」。<br>请改用这个链接打开上传页：<br><a href="https://2054647835-crypto.github.io/-solo/upload.html" target="_blank">https://2054647835-crypto.github.io/-solo/upload.html</a><br>或者在简历页底部点「上传作品」按钮也能跳过来。';
+  document.querySelector('.wrap').prepend(w);
+}
+
 let CFG = { owner:'', repo:'', token:'' };
 try { const s = localStorage.getItem('gh_cfg'); if(s) CFG = JSON.parse(s); } catch(e){}
 $('#owner').value = CFG.owner; $('#repo').value = CFG.repo; $('#token').value = CFG.token;
 
-async function gh(path, opts={}){
-  const url = `https://api.github.com/repos/${CFG.owner}/${CFG.repo}/contents/${encPath(path)}`;
+// 底层 API 封装（带清晰报错）
+async function ghApi(path, opts={}){
+  const url = `https://api.github.com${path}`;
   const res = await fetch(url, {
     method: opts.method || 'GET',
     headers: Object.assign({
@@ -125,17 +137,49 @@ async function gh(path, opts={}){
     body: opts.body ? opts.body : undefined
   });
   const txt = await res.text();
-  if(!res.ok){ const e = new Error(`GitHub ${res.status}: ${txt.slice(0,200)}`); e.status = res.status; throw e; }
-  return txt ? JSON.parse(txt) : {};
+  let json = null; try { json = txt ? JSON.parse(txt) : {}; } catch(e){}
+  if(!res.ok){
+    const detail = json && json.message ? json.message : txt.slice(0,200);
+    const e = new Error(`GitHub ${res.status}: ${detail}`); e.status = res.status; throw e;
+  }
+  return json || {};
 }
+
 async function getFile(path){
-  try { return await gh(path); } catch(e){ if(e.status===404) return null; throw e; }
+  try { return await ghApi(`/repos/${CFG.owner}/${CFG.repo}/contents/${encPath(path)}`); }
+  catch(e){ if(e.status===404) return null; throw e; }
 }
-async function putFile(path, contentB64, message){
+
+// 小文件（清单 content.js）：Contents API（永远 < 1MB）
+async function putFileSmall(path, contentB64, message){
   const existing = await getFile(path);
   const body = { message, content: contentB64 };
   if(existing) body.sha = existing.sha;
-  return gh(path, { method:'PUT', body: JSON.stringify(body) });
+  return ghApi(`/repos/${CFG.owner}/${CFG.repo}/contents/${encPath(path)}`, { method:'PUT', body: JSON.stringify(body) });
+}
+
+// 大文件（图片/视频）：Git Data API，突破单文件 1MB 限制，支持到 100MB
+async function putFileLarge(path, contentB64, message){
+  const o = CFG.owner, r = CFG.repo;
+  const blob = await ghApi(`/repos/${o}/${r}/git/blobs`, { method:'POST', body: JSON.stringify({ content: contentB64, encoding:'base64' }) });
+  const ref = await ghApi(`/repos/${o}/${r}/git/refs/heads/master`);
+  const commitSha = ref.object.sha;
+  const baseCommit = await ghApi(`/repos/${o}/${r}/git/commits/${commitSha}`);
+  const baseTree = baseCommit.tree.sha;
+  const tree = await ghApi(`/repos/${o}/${r}/git/trees`, { method:'POST', body: JSON.stringify({ base_tree: baseTree, tree:[{ path: encPath(path), mode:'100644', type:'blob', sha: blob.sha }] }) });
+  const commit = await ghApi(`/repos/${o}/${r}/git/commits`, { method:'POST', body: JSON.stringify({ message, tree: tree.sha, parents:[commitSha] }) });
+  await ghApi(`/repos/${o}/${r}/git/refs/heads/master`, { method:'PATCH', body: JSON.stringify({ sha: commit.sha }) });
+  return commit;
+}
+
+async function putFileAuto(path, contentB64, message, fileSize){
+  // > 900KB 走 Git Data 通道；其余走 Contents 通道
+  if(fileSize && fileSize > 900*1024) return putFileLarge(path, contentB64, message);
+  try { return await putFileSmall(path, contentB64, message); }
+  catch(e){
+    if(e.status === 413 || e.status === 422) return putFileLarge(path, contentB64, message);
+    throw e;
+  }
 }
 
 const EMPTY_MANIFEST = {
@@ -161,15 +205,22 @@ async function saveManifest(m){
   const d = await getFile('content.js');
   const header = d ? atob(d.content).split('window.__MANIFEST__')[0] : '';
   const newText = header + 'window.__MANIFEST__ = ' + JSON.stringify(m, null, 2) + ';\n';
-  await putFile('content.js', utf8ToB64(newText), 'update manifest');
+  await putFileSmall('content.js', utf8ToB64(newText), 'update manifest');
+}
+
+async function setBusy(btn, busy, label){
+  if(!btn) return;
+  if(busy){ btn.dataset.old = btn.textContent; btn.disabled = true; btn.textContent = label || '处理中…'; }
+  else { btn.disabled = false; btn.textContent = btn.dataset.old || btn.textContent; }
 }
 
 $('#saveCfg').onclick = async () => {
   CFG = { owner:$('#owner').value.trim(), repo:$('#repo').value.trim(), token:$('#token').value.trim() };
+  if(!CFG.token){ log('请先填写 Token','err'); $('#cfgStatus').textContent='⚠️ 缺 Token'; return; }
   localStorage.setItem('gh_cfg', JSON.stringify(CFG));
   $('#cfgStatus').textContent = '连接中…';
   try {
-    await gh('');
+    await ghApi(`/repos/${CFG.owner}/${CFG.repo}/contents/`);
     $('#cfgStatus').textContent = '✅ 连接成功';
     log(`已连接 ${CFG.owner}/${CFG.repo}`, 'ok');
     try {
@@ -183,16 +234,18 @@ $('#saveCfg').onclick = async () => {
 $('#upAvatar').onclick = () => $('#avatarFile').click();
 $('#avatarFile').onchange = async (e) => {
   const f = e.target.files[0]; if(!f) return;
+  const btn = $('#upAvatar'); await setBusy(btn, true, '上传中…');
   log(`上传头像: ${f.name}`);
   try{
     const b64 = await fileToB64(f);
     const path = `assets/avatar/${f.name}`;
-    await putFile(path, b64, `avatar ${f.name}`);
+    await putFileAuto(path, b64, `avatar ${f.name}`, f.size);
     const m = await loadManifest();
     m.avatar = path;
     await saveManifest(m);
     log('头像已更新','ok');
   }catch(err){ log(err.message,'err'); }
+  await setBusy(btn, false);
   e.target.value = '';
 };
 
@@ -204,20 +257,24 @@ $$('.slotfile').forEach(inp=>{
     const slot = inp.dataset.slot;
     const files = [...e.target.files];
     if(!files.length) return;
+    const btn = $(`.upslot[data-slot="${slot}"]`);
+    await setBusy(btn, true, '上传中…');
     log(`上传「${slot}」：${files.length} 个文件`);
     try{
       const m = await loadManifest();
       if(!m.slots[slot]) m.slots[slot] = [];
       for(const f of files){
+        log(`  ↑ ${f.name} (${(f.size/1024).toFixed(0)}KB)`);
         const b64 = await fileToB64(f);
         const path = `assets/${slot}/${f.name}`;
-        await putFile(path, b64, `${slot} ${f.name}`);
+        await putFileAuto(path, b64, `${slot} ${f.name}`, f.size);
         if(!m.slots[slot].includes(path)) m.slots[slot].push(path);
         log(`  ✓ ${f.name}`, 'ok');
       }
       await saveManifest(m);
       log(`「${slot}」上传完成，清单已更新`, 'ok');
     }catch(err){ log(err.message,'err'); }
+    await setBusy(btn, false);
     e.target.value = '';
   };
 });
