@@ -10,18 +10,10 @@
 window.__MANIFEST__ = {
   "avatar": "",
   "slots": {
-    "ai-video": [
-      "assets/ai-video/13430901476358959.mp4"
-    ],
-    "ai-poster": [
-      "assets/ai-poster/文字海报片版色5.jpg",
-      "assets/ai-poster/文字海报片版色彩1.jpg",
-      "assets/ai-poster/文字海报片版色彩3.jpg"
-    ],
-    "ai-kaogong": [
-      "assets/ai-kaogong/å¾®ä¿¡å¾ç_20260811134722_10_10.jpg"
-    ],
-    "photo-wall": []
+    "ai-video": [{inner}],
+    "ai-poster": [{inner}],
+    "ai-kaogong": [{inner}],
+    "photo-wall": [{inner}]
   },
   "links": [
     {
