@@ -24,7 +24,16 @@ window.__MANIFEST__ = {
     "ai-kaogong": [
       { "src": "assets/ai-kaogong/微信图片_20260811134722_10_10.jpg", "title": "考公打卡小程序 · AI Agent开发" }
     ],
-    "photo-wall": []             // → assets/photo-wall/（暂未上传）
+    "photo-wall": [],             // → assets/photo-wall/（暂未上传）
+
+    // 项目素材：7 个项目，逐一点进详情层查看，主页不堆媒体
+    "project-0": [],  // → assets/project-0/（B端老板IP）
+    "project-1": [],  // → assets/project-1/（小众宠物IP）
+    "project-2": [],  // → assets/project-2/（跨品类脚本）
+    "project-3": [],  // → assets/project-3/（数据优化）
+    "project-4": [],  // → assets/project-4/（私域运营）
+    "project-5": [],  // → assets/project-5/（AI考公打卡小程序）
+    "project-6": []   // → assets/project-6/（企业VI设计）
   },
 
   // 外链作品：把 url 改成你的主页链接（留空 "" 则保持占位）
