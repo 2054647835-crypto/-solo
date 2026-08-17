@@ -25,6 +25,17 @@
     };
   }
 
+  function parseExternal(url){
+    url = (url || "").trim();
+    if(!url) return null;
+    if(/\.(mp4|webm|ogg|mov)(\?.*)?$/i.test(url)) return { kind:"video", src:url };
+    var bili = url.match(/bilibili\.com\/video\/(BV[0-9A-Za-z]+)/i) || url.match(/[?&]bvid=(BV[0-9A-Za-z]+)/i);
+    if(bili) return { kind:"iframe", src:"https://player.bilibili.com/player.html?bvid="+bili[1]+"&high_quality=1&autoplay=0&danmaku=0" };
+    var yt = url.match(/youtu\.be\/([A-Za-z0-9_-]{6,})/i) || url.match(/youtube\.com\/(?:watch\?v=|embed\/|shorts\/)([A-Za-z0-9_-]{6,})/i);
+    if(yt) return { kind:"iframe", src:"https://www.youtube.com/embed/"+yt[1] };
+    return { kind:"link", src:url };
+  }
+
   function cardHTML(it, i) {
     var label =
       '<div class="teaching-work-label">' +
@@ -32,6 +43,13 @@
       (it.desc ? "<span>" + it.desc + "</span>" : "") +
       "<em>" + (it.type === "video" ? "点击播放" : "点击查看大图") + "</em>" +
       "</div>";
+    if (it.type === "external") {
+      var ex = parseExternal(it.src);
+      var extIcon = (ex && ex.kind === "link") ? "🔗" : "▶";
+      return '<div class="teaching-work manifest-card" data-i="' + i + '">' +
+        '<div style="position:absolute;inset:0;background:linear-gradient(135deg,#0071e3,#42a5f5);display:flex;align-items:center;justify-content:center;color:#fff;font-size:34px">' + extIcon + '</div>' +
+        label + '</div>';
+    }
     if (it.type === "video") {
       return '<div class="teaching-work manifest-card" data-i="' + i + '">' +
         '<video muted preload="metadata" style="width:100%;height:100%;object-fit:cover;border-radius:inherit;position:absolute;inset:0"><source src="' + it.src + '" type="video/mp4"></video>' +
@@ -139,12 +157,17 @@
     var it = lbItems[lbIndex];
     if (!it) return;
     var stage = lbEl.querySelector(".ml-content");
-    if (it.type === "video") {
-      stage.innerHTML =
-        '<video controls autoplay style="max-width:90vw;max-height:82vh;border-radius:12px;box-shadow:0 20px 60px rgba(0,0,0,.5)"><source src="' + it.src + '" type="video/mp4"></video>';
+    stage.innerHTML = "";
+    if (it.type === "external") {
+      var ex = parseExternal(it.src);
+      if (!ex) { stage.innerHTML = '<div style="color:#fff;padding:24px">链接无法识别</div>'; }
+      else if (ex.kind === "video") { var v = document.createElement("video"); v.controls = true; v.autoplay = true; v.src = ex.src; v.style.cssText = "max-width:90vw;max-height:82vh;border-radius:12px;box-shadow:0 20px 60px rgba(0,0,0,.5)"; stage.appendChild(v); }
+      else if (ex.kind === "iframe") { var f = document.createElement("iframe"); f.src = ex.src; f.allow = "autoplay; fullscreen; picture-in-picture; encrypted-media"; f.allowFullscreen = true; f.style.cssText = "width:90vw;max-width:960px;height:56.25vw;max-height:82vh;border:0;border-radius:12px;box-shadow:0 20px 60px rgba(0,0,0,.5);background:#000"; stage.appendChild(f); }
+      else { var a = document.createElement("a"); a.href = ex.src; a.target = "_blank"; a.rel = "noopener"; a.textContent = "▶ 在新窗口播放 / 打开链接"; a.style.cssText = "display:inline-block;padding:16px 24px;background:#0071e3;color:#fff;border-radius:12px;text-decoration:none;font-weight:500"; stage.appendChild(a); }
+    } else if (it.type === "video") {
+      var v2 = document.createElement("video"); v2.controls = true; v2.autoplay = true; v2.src = it.src; v2.style.cssText = "max-width:90vw;max-height:82vh;border-radius:12px;box-shadow:0 20px 60px rgba(0,0,0,.5)"; stage.appendChild(v2);
     } else {
-      stage.innerHTML =
-        '<img src="' + it.src + '" alt="' + (it.title || "") + '" style="max-width:90vw;max-height:82vh;border-radius:12px;box-shadow:0 20px 60px rgba(0,0,0,.5)">';
+      var im = document.createElement("img"); im.src = it.src; im.alt = it.title || ""; im.style.cssText = "max-width:90vw;max-height:82vh;border-radius:12px;box-shadow:0 20px 60px rgba(0,0,0,.5)"; stage.appendChild(im);
     }
     lbEl.querySelector(".ml-caption").textContent = it.title || "";
   }
