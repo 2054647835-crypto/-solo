@@ -95,7 +95,7 @@ a{color:var(--primary);}
       <button class="btn sec" id="upProj">选择视频/图片</button>
       <input type="file" id="projFile" accept="video/*,image/*" multiple hidden>
     </div>
-    <p class="hint">分类由上面下拉决定，绝不会放错项目。上传后去简历页点对应项目的「查看项目作品 →」。</p>
+    <p class="hint">分类由上面下拉决定，绝不会放错项目。视频建议压到 <b>100MB 内</b>（GitHub 单文件硬上限）；超大的视频用外链更稳。上传后去简历页点对应项目的「查看项目作品 →」。</p>
   </div>
 
   <div class="card">
@@ -237,17 +237,21 @@ $('#saveCfg').onclick = async () => {
   CFG = { owner:$('#owner').value.trim(), repo:$('#repo').value.trim(), token:$('#token').value.trim() };
   if(!CFG.token){ log('请先填写 Token','err'); $('#cfgStatus').textContent='⚠️ 缺 Token'; return; }
   localStorage.setItem('gh_cfg', JSON.stringify(CFG));
-  $('#cfgStatus').textContent = '连接中…';
+  $('#cfgStatus').textContent = '校验中…';
   try {
+    await ghApi('/user');   // 必须带有效 Token 才能通过，真正校验 Token 是否有效
     await ghApi(`/repos/${CFG.owner}/${CFG.repo}/contents/`);
-    $('#cfgStatus').textContent = '✅ 连接成功';
+    $('#cfgStatus').textContent = '✅ Token 有效 · 已连接';
     log(`已连接 ${CFG.owner}/${CFG.repo}`, 'ok');
     try {
       const m = await loadManifest();
       $$('.link').forEach(inp=>{ const i=+inp.dataset.i; if(m.links[i]) inp.value = m.links[i].url||''; });
       log('已载入仓库现有内容','ok');
     } catch(e){ log('载入清单失败：'+e.message,'err'); }
-  } catch(e){ $('#cfgStatus').textContent='❌ 失败'; log(e.message,'err'); }
+  } catch(e){
+    if(e.status===401){ $('#cfgStatus').textContent='❌ Token 无效'; log('Token 无效（Bad credentials）：请清空输入框，重新粘贴完整的 ghp_... 或 github_pat_... 再保存','err'); }
+    else { $('#cfgStatus').textContent='❌ 失败'; log(e.message,'err'); }
+  }
 };
 
 $('#upAvatar').onclick = () => $('#avatarFile').click();
@@ -283,6 +287,7 @@ $$('.slotfile').forEach(inp=>{
       const m = await loadManifest();
       if(!m.slots[slot]) m.slots[slot] = [];
       for(const f of files){
+        if(f.size > 100*1024*1024){ log(`  ✗ ${f.name} 超过 GitHub 单文件 100MB 上限，已跳过。大视频请压到 100MB 内，或用外链`, 'err'); continue; }
         log(`  ↑ ${f.name} (${(f.size/1024).toFixed(0)}KB)`);
         const b64 = await fileToB64(f);
         const path = `assets/${slot}/${f.name}`;
@@ -308,18 +313,19 @@ $('#projFile').onchange = async (e) => {
   await setBusy(btn, true, '上传中…');
   log(`上传「${slot}」：${files.length} 个文件`);
   try{
-    const m = await loadManifest();
-    if(!m.slots[slot]) m.slots[slot] = [];
-    for(const f of files){
-      log(`  ↑ ${f.name} (${(f.size/1024).toFixed(0)}KB)`);
-      const b64 = await fileToB64(f);
-      const path = `assets/${slot}/${f.name}`;
-      await putFileAuto(path, b64, `${slot} ${f.name}`, f.size);
-      if(!m.slots[slot].includes(path)) m.slots[slot].push(path);
-      log(`  ✓ ${f.name}`, 'ok');
-    }
-    await saveManifest(m);
-    log(`「${slot}」上传完成，清单已更新`, 'ok');
+      const m = await loadManifest();
+      if(!m.slots[slot]) m.slots[slot] = [];
+      for(const f of files){
+        if(f.size > 100*1024*1024){ log(`  ✗ ${f.name} 超过 GitHub 单文件 100MB 上限，已跳过。大视频请压到 100MB 内，或用外链`, 'err'); continue; }
+        log(`  ↑ ${f.name} (${(f.size/1024).toFixed(0)}KB)`);
+        const b64 = await fileToB64(f);
+        const path = `assets/${slot}/${f.name}`;
+        await putFileAuto(path, b64, `${slot} ${f.name}`, f.size);
+        if(!m.slots[slot].includes(path)) m.slots[slot].push(path);
+        log(`  ✓ ${f.name}`, 'ok');
+      }
+      await saveManifest(m);
+      log(`「${slot}」上传完成，清单已更新`, 'ok');
   }catch(err){ log(err.message,'err'); }
   await setBusy(btn, false);
   e.target.value = '';
