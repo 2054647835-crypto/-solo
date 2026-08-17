@@ -80,6 +80,25 @@ a{color:var(--primary);}
   </div>
 
   <div class="card">
+    <h2>⑤ 项目素材（按项目上传）</h2>
+    <label>选择项目</label>
+    <select id="projSel">
+      <option value="project-0">01 · B端老板IP</option>
+      <option value="project-1">02 · 小众宠物IP</option>
+      <option value="project-2">03 · 跨品类脚本</option>
+      <option value="project-3">04 · 数据优化</option>
+      <option value="project-4">05 · 私域运营</option>
+      <option value="project-5">06 · AI考公打卡小程序</option>
+      <option value="project-6">07 · 企业VI设计</option>
+    </select>
+    <div class="row" style="margin-top:12px">
+      <button class="btn sec" id="upProj">选择视频/图片</button>
+      <input type="file" id="projFile" accept="video/*,image/*" multiple hidden>
+    </div>
+    <p class="hint">分类由上面下拉决定，绝不会放错项目。上传后去简历页点对应项目的「查看项目作品 →」。</p>
+  </div>
+
+  <div class="card">
     <h2>④ 外链作品（填你的主页链接）</h2>
     <label>抖音</label><input class="link" data-i="0" type="text" placeholder="https://...">
     <label>小红书</label><input class="link" data-i="1" type="text" placeholder="https://...">
@@ -184,7 +203,7 @@ async function putFileAuto(path, contentB64, message, fileSize){
 
 const EMPTY_MANIFEST = {
   avatar:'',
-  slots:{ 'ai-video':[], 'ai-poster':[], 'ai-kaogong':[], 'photo-wall':[] },
+  slots:{ 'ai-video':[], 'ai-poster':[], 'ai-kaogong':[], 'photo-wall':[], 'project-0':[],'project-1':[],'project-2':[],'project-3':[],'project-4':[],'project-5':[],'project-6':[] },
   links:[
     {name:'抖音',url:'',icon:'🎵'},
     {name:'小红书',url:'',icon:'📕'},
@@ -278,6 +297,33 @@ $$('.slotfile').forEach(inp=>{
     e.target.value = '';
   };
 });
+
+// ---- 项目素材（按项目上传）----
+$('#upProj').onclick = () => $('#projFile').click();
+$('#projFile').onchange = async (e) => {
+  const slot = $('#projSel').value;
+  const files = [...e.target.files];
+  if(!files.length) return;
+  const btn = $('#upProj');
+  await setBusy(btn, true, '上传中…');
+  log(`上传「${slot}」：${files.length} 个文件`);
+  try{
+    const m = await loadManifest();
+    if(!m.slots[slot]) m.slots[slot] = [];
+    for(const f of files){
+      log(`  ↑ ${f.name} (${(f.size/1024).toFixed(0)}KB)`);
+      const b64 = await fileToB64(f);
+      const path = `assets/${slot}/${f.name}`;
+      await putFileAuto(path, b64, `${slot} ${f.name}`, f.size);
+      if(!m.slots[slot].includes(path)) m.slots[slot].push(path);
+      log(`  ✓ ${f.name}`, 'ok');
+    }
+    await saveManifest(m);
+    log(`「${slot}」上传完成，清单已更新`, 'ok');
+  }catch(err){ log(err.message,'err'); }
+  await setBusy(btn, false);
+  e.target.value = '';
+};
 
 $('#saveLinks').onclick = async () => {
   try{
