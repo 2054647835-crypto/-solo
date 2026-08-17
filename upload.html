@@ -96,6 +96,15 @@ a{color:var(--primary);}
       <input type="file" id="projFile" accept="video/*,image/*" multiple hidden>
     </div>
     <p class="hint">分类由上面下拉决定，绝不会放错项目。视频建议压到 <b>100MB 内</b>（GitHub 单文件硬上限）；超大的视频用外链更稳。上传后去简历页点对应项目的「查看项目作品 →」。</p>
+    <div style="margin-top:14px;border-top:1px solid var(--border);padding-top:14px">
+      <label>或粘贴视频外链（B站 / YouTube / 云盘直链，<b>不限大小</b>）</label>
+      <input type="text" id="extUrl" placeholder="https://www.bilibili.com/video/BVxxxx 或 https://youtu.be/xxxx">
+      <div class="row" style="margin-top:8px">
+        <input type="text" id="extTitle" placeholder="视频标题（选填）" style="flex:1;min-width:160px">
+        <button class="btn" id="addExt">添加外链</button>
+      </div>
+      <p class="hint">外链视频由 B站/云盘负责托管，<b>适合 100MB 以上</b>的长视频。添加后去简历页点对应项目的「查看项目作品 →」即可播放。</p>
+    </div>
   </div>
 
   <div class="card">
@@ -329,6 +338,23 @@ $('#projFile').onchange = async (e) => {
   }catch(err){ log(err.message,'err'); }
   await setBusy(btn, false);
   e.target.value = '';
+};
+
+$('#addExt').onclick = async () => {
+  const slot = $('#projSel').value;
+  const url = $('#extUrl').value.trim();
+  const title = $('#extTitle').value.trim();
+  if(!url){ log('请先粘贴视频链接','err'); return; }
+  const btn = $('#addExt'); await setBusy(btn, true, '添加中…');
+  try{
+    const m = await loadManifest();
+    if(!m.slots[slot]) m.slots[slot] = [];
+    m.slots[slot].push({ src:url, title:title||'外部视频', type:'external' });
+    await saveManifest(m);
+    log(`已将外链视频添加到「${slot}」`, 'ok');
+    $('#extUrl').value=''; $('#extTitle').value='';
+  }catch(err){ log(err.message,'err'); }
+  await setBusy(btn, false);
 };
 
 $('#saveLinks').onclick = async () => {
