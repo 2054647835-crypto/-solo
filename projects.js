@@ -295,12 +295,21 @@
     // 作品集（媒体画廊）
     var raw = (M && M.slots && M.slots["project-" + id]) || [];
     var items = raw.map(normalize);
+    // 调试：弹层打开时在 console 打印数据，方便排查"看不到图"问题
+    try {
+      console.log("[projects] openProject(" + id + ") items.length =", items.length, " first.src =", items[0] && items[0].src, " rawLen =", raw.length, " rawType =", typeof raw[0]);
+    } catch (e) {}
     if (items.length) {
       body += '<div class="proj-section"><h4>作品集</h4><div class="proj-gallery">';
       items.forEach(function (it) {
         body += '<div class="proj-thumb">' + thumbHtml(it) + "</div>";
       });
       body += "</div></div>";
+    } else {
+      // 调试兜底：让用户肉眼看到当前 slot 实际内容（不再默默隐藏）
+      body += '<div class="proj-section"><h4>作品集</h4><div class="proj-gallery" style="display:block;color:#b00;font-size:.85rem;padding:12px;background:#fff4f4;border:1px dashed #f99;border-radius:8px">';
+      body += '⚠️ 当前项目 (project-' + id + ') 在 content.js 的 slots 里没有作品。raw 类型 = ' + typeof raw[0] + '，raw 长度 = ' + raw.length + '。<br>原始值预览：<code>' + (typeof raw === "string" ? raw : JSON.stringify(raw).slice(0, 300)) + '</code>';
+      body += '</div></div>';
     }
 
     overlay.querySelector(".proj-head").innerHTML = head;
