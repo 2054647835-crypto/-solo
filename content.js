@@ -123,7 +123,9 @@ window.__MANIFEST__ = {
       { "src": "assets/project-1/账号接手对比2.png", "title": "账号接手对比2.png", "type": "image" },
       { "src": "assets/project-1/首条即爆款.mp4", "title": "首条即爆款.mp4", "type": "video" },
     ],
-    "project-2": [], "project-3": [], "project-4": [], "project-5": [], "project-6": []
+    "project-2": [], "project-3": [], "project-4": [], "project-5": [
+      { "src": "assets/ai-kaogong/微信图片_20260811134722_10_10.jpg", "title": "考公打卡小程序 · AI Agent开发", "type": "image" }
+    ], "project-6": []
   },
   "links": [
     { "name": "抖音", "url": "", "icon": "🎵" },
