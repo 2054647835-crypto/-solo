@@ -182,15 +182,42 @@
 
   function init() {
     injectButtons();
-    // 项目区经 SPA class 切换显隐，黑盒可能重渲染卡片 → 重新注入按钮
+    var grid = document.getElementById("projectsGrid");
     var proj = document.getElementById("page-projects");
+
+    // 点击项目卡：若该项目已有发布作品，直接打开钻取层（覆盖旧弹层）
+    function onCardClick(e) {
+      var el = e.target;
+      var card = null;
+      while (el && el !== grid) {
+        if (el.classList && el.classList.contains("project-card")) { card = el; break; }
+        el = el.parentNode;
+      }
+      if (!card) return;
+      var id = card.getAttribute("data-project");
+      var M = window.__MANIFEST__;
+      var items = (M && M.slots && M.slots["project-" + id]) || [];
+      if (!items.length) return; // 该项目尚无作品 → 交给旧弹层
+      e.stopPropagation();
+      e.preventDefault();
+      var h3 = card.querySelector(".project-body h3");
+      var p = card.querySelector(".project-body p");
+      var numEl = card.querySelector(".project-num");
+      openProject(id,
+        h3 ? h3.textContent.trim() : ("项目" + id),
+        numEl ? numEl.textContent.trim() : ("0" + (+id + 1)),
+        p ? p.textContent.trim() : "");
+    }
+    if (grid) grid.addEventListener("click", onCardClick, true); // capture：抢在黑盒之前
+
+    // 黑盒可能重渲染卡片（childList）或切换显隐（class）→ 重新注入按钮
     if (proj && "MutationObserver" in window) {
       new MutationObserver(function () { injectButtons(); }).observe(proj, {
-        attributes: true,
-        attributeFilter: ["class"]
+        childList: true, subtree: true, attributes: true, attributeFilter: ["class"]
       });
     }
-    setTimeout(injectButtons, 120);
+    // 多重兜底，压过黑盒的初次 / 延迟渲染
+    [120, 400, 900, 1600].forEach(function (t) { setTimeout(injectButtons, t); });
   }
 
   if (document.readyState === "loading") {
