@@ -1,9 +1,10 @@
 // ============================================================
 //  项目详情钻取层（projects.js）
 //  与 manifest.js 平行，不碰 base64 黑盒。
-//  作用：在每个项目卡片注入「查看项目作品 →」按钮，点击后弹出
-//  全屏详情层，只展示该项目的视频/截图（从 content.js 读取）。
-//  主页保持极简，点进去才展开——渐进式披露。
+//  作用：点击项目卡片 → 弹出全屏详情层，展示
+//  描述 / 详述 / 我是怎么做的 / 能力维度分析(雷达图) / 作品集(媒体画廊)。
+//  所有文案来自 content.js 的 window.__MANIFEST__.projects；
+//  媒体来自 window.__MANIFEST__.slots；关闭时彻底停掉视频音频。
 // ============================================================
 (function () {
   "use strict";
@@ -18,14 +19,31 @@
     ".proj-overlay{position:fixed;inset:0;z-index:99999;display:none;align-items:center;justify-content:center;",
     "padding:40px 16px;overflow:auto;font-family:-apple-system,BlinkMacSystemFont,'Segoe UI','PingFang SC','Microsoft YaHei',sans-serif}",
     ".proj-overlay .proj-backdrop{position:fixed;inset:0;background:rgba(0,0,0,.55);backdrop-filter:blur(6px)}",
-    ".proj-panel{position:relative;z-index:1;width:100%;max-width:920px;max-height:88vh;overflow:auto;",
-    "background:#ffffff;color:#1d1d1f;border-radius:20px;padding:32px;box-shadow:0 30px 80px rgba(0,0,0,.4)}",
-    ".proj-close{position:absolute;top:16px;right:16px;width:36px;height:36px;border:none;border-radius:50%;",
-    "background:rgba(120,120,120,.15);color:#1d1d1f;font-size:20px;line-height:1;cursor:pointer}",
-    ".proj-head{margin:0 40px 20px 0}",
+    ".proj-panel{position:relative;z-index:1;width:100%;max-width:940px;max-height:90vh;overflow:auto;",
+    "background:#ffffff;color:#1d1d1f;border-radius:22px;padding:36px 36px 32px;box-shadow:0 30px 80px rgba(0,0,0,.4)}",
+    ".proj-close{position:absolute;top:16px;right:16px;width:38px;height:38px;border:none;border-radius:50%;",
+    "background:rgba(120,120,120,.15);color:#1d1d1f;font-size:22px;line-height:1;cursor:pointer;z-index:2}",
+    ".proj-close:hover{background:rgba(120,120,120,.28)}",
+    ".proj-head{margin:0 44px 6px 0}",
     ".proj-num{display:inline-block;font-size:.8rem;font-weight:700;color:#0071e3;letter-spacing:.1em}",
-    ".proj-head h2{margin:6px 0 8px;font-size:1.6rem;font-weight:700;color:#1d1d1f}",
-    ".proj-head p{margin:0;color:#6e6e73;font-size:.95rem;line-height:1.6;max-width:60ch}",
+    ".proj-head h2{margin:6px 0 8px;font-size:1.7rem;font-weight:700;color:#1d1d1f;line-height:1.25}",
+    ".proj-meta{display:flex;flex-wrap:wrap;gap:6px 16px;margin:4px 0 2px}",
+    ".proj-role{font-size:.9rem;font-weight:600;color:#1d1d1f}",
+    ".proj-time{font-size:.9rem;color:#86868b}",
+    ".proj-body{padding-right:4px}",
+    ".proj-desc{margin:10px 0 2px;color:#1d1d1f;font-size:1rem;line-height:1.75}",
+    ".proj-section{margin-top:24px}",
+    ".proj-section h4{margin:0 0 12px;font-size:.8rem;font-weight:700;letter-spacing:.09em;text-transform:uppercase;color:#86868b}",
+    ".proj-detail{margin:0;color:#424245;font-size:.96rem;line-height:1.78}",
+    ".proj-story{list-style:none;margin:0;padding:0;display:flex;flex-direction:column;gap:16px}",
+    ".proj-story li{display:flex;gap:14px;align-items:flex-start}",
+    ".proj-step{flex:0 0 auto;width:30px;height:30px;border-radius:50%;background:rgba(0,113,227,.1);",
+    "color:#0071e3;font-size:.8rem;font-weight:700;display:flex;align-items:center;justify-content:center;margin-top:1px}",
+    ".proj-story strong{display:block;color:#1d1d1f;font-size:.96rem;margin-bottom:4px}",
+    ".proj-story p{margin:0;color:#424245;font-size:.92rem;line-height:1.68}",
+    ".proj-chart-sec{display:flex;flex-direction:column;align-items:center;text-align:center}",
+    ".proj-chart-wrap{width:100%;display:flex;justify-content:center;padding:6px 0 2px}",
+    ".proj-radar{max-width:320px;width:100%;height:auto}",
     ".proj-gallery{display:grid;grid-template-columns:repeat(auto-fill,minmax(200px,1fr));gap:14px}",
     ".proj-thumb{position:relative;aspect-ratio:4/3;border-radius:14px;overflow:hidden;cursor:zoom-in;background:#eee}",
     ".proj-thumb img,.proj-thumb video{width:100%;height:100%;object-fit:cover;display:block}",
@@ -36,7 +54,8 @@
     ".proj-empty{color:#6e6e73;font-size:.95rem;padding:24px 0}",
     ".proj-lb{position:fixed;inset:0;z-index:100000;display:none;align-items:center;justify-content:center;background:rgba(0,0,0,.9)}",
     ".proj-lb img,.proj-lb video{max-width:90vw;max-height:85vh;border-radius:14px;box-shadow:0 20px 60px rgba(0,0,0,.5)}",
-    ".proj-lb .lb-close{position:absolute;top:20px;right:24px;color:#fff;font-size:32px;background:none;border:none;cursor:pointer}"
+    ".proj-lb .lb-close{position:absolute;top:20px;right:24px;color:#fff;font-size:32px;background:none;border:none;cursor:pointer}",
+    "@media (max-width:560px){.proj-panel{padding:26px 18px 22px}.proj-head h2{font-size:1.4rem}}"
   ].join("");
   document.head.appendChild(style);
 
@@ -75,7 +94,7 @@
     overlay.innerHTML =
       '<div class="proj-backdrop"></div>' +
       '<div class="proj-panel"><button class="proj-close" aria-label="关闭">×</button>' +
-      '<div class="proj-head"></div><div class="proj-gallery"></div>' +
+      '<div class="proj-head"></div><div class="proj-body"></div>' +
       '<p class="proj-empty" style="display:none">该项目暂未上传作品。打开上传页 → 选「项目素材」→ 选对应项目即可添加。</p></div>';
     document.body.appendChild(overlay);
 
@@ -114,46 +133,167 @@
     closeLb(); // 关主层时一并关灯箱，彻底停掉音频
   }
 
-  function openProject(id, title, num, desc) {
+  // 手绘雷达图（零依赖，静态站最稳）
+  function drawRadar(canvas, data, labels) {
+    if (!canvas || !data || !data.length) return;
+    var dpr = window.devicePixelRatio || 1;
+    var size = 300;
+    canvas.width = size * dpr;
+    canvas.height = size * dpr;
+    canvas.style.width = size + "px";
+    canvas.style.height = size + "px";
+    var ctx = canvas.getContext("2d");
+    ctx.scale(dpr, dpr);
+    ctx.clearRect(0, 0, size, size);
+
+    var cx = size / 2, cy = size / 2 + 4;
+    var radius = 96;
+    var n = data.length;
+    var rings = 4;
+    var i, ang, x, y, v;
+
+    // 网格环
+    ctx.strokeStyle = "rgba(0,0,0,0.08)";
+    ctx.lineWidth = 1;
+    for (var r = 1; r <= rings; r++) {
+      var rr = radius * r / rings;
+      ctx.beginPath();
+      for (i = 0; i < n; i++) {
+        ang = -Math.PI / 2 + i * 2 * Math.PI / n;
+        x = cx + rr * Math.cos(ang);
+        y = cy + rr * Math.sin(ang);
+        if (i === 0) ctx.moveTo(x, y); else ctx.lineTo(x, y);
+      }
+      ctx.closePath();
+      ctx.stroke();
+    }
+    // 轴线 + 标签
+    ctx.fillStyle = "#6e6e73";
+    ctx.font = "12px -apple-system,BlinkMacSystemFont,'PingFang SC','Microsoft YaHei',sans-serif";
+    ctx.textAlign = "center";
+    ctx.textBaseline = "middle";
+    for (i = 0; i < n; i++) {
+      ang = -Math.PI / 2 + i * 2 * Math.PI / n;
+      x = cx + radius * Math.cos(ang);
+      y = cy + radius * Math.sin(ang);
+      ctx.beginPath();
+      ctx.moveTo(cx, cy);
+      ctx.lineTo(x, y);
+      ctx.strokeStyle = "rgba(0,0,0,0.08)";
+      ctx.stroke();
+      var lx = cx + (radius + 20) * Math.cos(ang);
+      var ly = cy + (radius + 16) * Math.sin(ang);
+      ctx.fillText(labels[i], lx, ly);
+    }
+    // 数据多边形
+    ctx.beginPath();
+    for (i = 0; i < n; i++) {
+      ang = -Math.PI / 2 + i * 2 * Math.PI / n;
+      v = Math.max(0, Math.min(100, data[i])) / 100;
+      x = cx + radius * v * Math.cos(ang);
+      y = cy + radius * v * Math.sin(ang);
+      if (i === 0) ctx.moveTo(x, y); else ctx.lineTo(x, y);
+    }
+    ctx.closePath();
+    ctx.fillStyle = "rgba(0,113,227,0.18)";
+    ctx.fill();
+    ctx.strokeStyle = "#0071e3";
+    ctx.lineWidth = 2;
+    ctx.stroke();
+    // 顶点
+    for (i = 0; i < n; i++) {
+      ang = -Math.PI / 2 + i * 2 * Math.PI / n;
+      v = Math.max(0, Math.min(100, data[i])) / 100;
+      x = cx + radius * v * Math.cos(ang);
+      y = cy + radius * v * Math.sin(ang);
+      ctx.beginPath();
+      ctx.arc(x, y, 3, 0, 2 * Math.PI);
+      ctx.fillStyle = "#0071e3";
+      ctx.fill();
+    }
+  }
+
+  function thumbHtml(it) {
+    if (it.type === "external") {
+      var ex = parseExternal(it.src);
+      var ic = (ex && ex.kind === "link") ? "🔗" : "▶";
+      return '<div style="position:absolute;inset:0;background:linear-gradient(135deg,#0071e3,#42a5f5);display:flex;align-items:center;justify-content:center;color:#fff;font-size:34px">' + ic + '</div>' +
+        (it.title ? '<div class="proj-cap">' + escapeHtml(it.title) + "</div>" : "");
+    } else if (it.type === "video") {
+      return '<video muted preload="metadata" style="width:100%;height:100%;object-fit:cover">' +
+        '<source src="' + it.src + '" type="video/mp4"></video>' +
+        '<div class="play">▶</div>' +
+        (it.title ? '<div class="proj-cap">' + escapeHtml(it.title) + "</div>" : "");
+    }
+    return '<img src="' + it.src + '" alt="' + escapeHtml(it.title) + '" style="width:100%;height:100%;object-fit:cover">' +
+      (it.title ? '<div class="proj-cap">' + escapeHtml(it.title) + "</div>" : "");
+  }
+
+  function openProject(id) {
     if (!overlay) buildOverlay();
     closeLb(); // 打开新项目前，确保残留的灯箱视频已停
-    overlay.querySelector(".proj-head").innerHTML =
-      '<span class="proj-num">' + escapeHtml(num) + "</span>" +
-      "<h2>" + escapeHtml(title) + "</h2>" +
-      "<p>" + escapeHtml(desc) + "</p>";
 
-    var gal = overlay.querySelector(".proj-gallery");
-    var empty = overlay.querySelector(".proj-empty");
     var M = window.__MANIFEST__;
+    var pj = (M && M.projects && M.projects[id]) || null;
+    var card = document.querySelector('article.project-card[data-project="' + id + '"]');
+    var h3 = card && card.querySelector(".project-body h3");
+    var numEl = card && card.querySelector(".project-num");
+    var title = h3 ? h3.textContent.trim() : ("项目" + id);
+    var num = numEl ? numEl.textContent.trim() : ("0" + (+id + 1));
+
+    // 头部
+    var head = '<span class="proj-num">' + escapeHtml(num) + "</span>" +
+      "<h2>" + escapeHtml(title) + "</h2>";
+    if (pj && (pj.role || pj.time)) {
+      head += '<div class="proj-meta">' +
+        (pj.role ? '<span class="proj-role">' + escapeHtml(pj.role) + "</span>" : "") +
+        (pj.time ? '<span class="proj-time">' + escapeHtml(pj.time) + "</span>" : "") +
+        "</div>";
+    }
+
+    // 正文区块
+    var body = "";
+    if (pj && pj.desc) body += '<p class="proj-desc">' + escapeHtml(pj.desc) + "</p>";
+    if (pj && pj.detail) body += '<div class="proj-section"><h4>项目详述</h4><p class="proj-detail">' + escapeHtml(pj.detail) + "</p></div>";
+    if (pj && pj.story && pj.story.length) {
+      body += '<div class="proj-section"><h4>我是怎么做的</h4><ul class="proj-story">';
+      pj.story.forEach(function (s) {
+        body += '<li><span class="proj-step">' + escapeHtml(s.step) + "</span><div><strong>" + escapeHtml(s.title) + "</strong><p>" + escapeHtml(s.desc) + "</p></div></li>";
+      });
+      body += "</ul></div>";
+    }
+    if (pj && pj.chartData && pj.chartData.length) {
+      body += '<div class="proj-section proj-chart-sec"><h4>能力维度分析</h4><div class="proj-chart-wrap"><canvas class="proj-radar"></canvas></div></div>';
+    }
+
+    // 作品集（媒体画廊）
     var raw = (M && M.slots && M.slots["project-" + id]) || [];
     var items = raw.map(normalize);
-
-    gal.innerHTML = "";
-    if (!items.length) {
-      empty.style.display = "block";
-    } else {
-      empty.style.display = "none";
+    if (items.length) {
+      body += '<div class="proj-section"><h4>作品集</h4><div class="proj-gallery">';
       items.forEach(function (it) {
-        var t = document.createElement("div");
-        t.className = "proj-thumb";
-        if (it.type === "external") {
-          var ex = parseExternal(it.src);
-          var ic = (ex && ex.kind === "link") ? "🔗" : "▶";
-          t.innerHTML = '<div style="position:absolute;inset:0;background:linear-gradient(135deg,#0071e3,#42a5f5);display:flex;align-items:center;justify-content:center;color:#fff;font-size:34px">' + ic + '</div>' +
-            (it.title ? '<div class="proj-cap">' + escapeHtml(it.title) + "</div>" : "");
-        } else if (it.type === "video") {
-          t.innerHTML = '<video muted preload="metadata" style="width:100%;height:100%;object-fit:cover">' +
-            '<source src="' + it.src + '" type="video/mp4"></video>' +
-            '<div class="play">▶</div>' +
-            (it.title ? '<div class="proj-cap">' + escapeHtml(it.title) + "</div>" : "");
-        } else {
-          t.innerHTML = '<img src="' + it.src + '" alt="' + escapeHtml(it.title) + '" style="width:100%;height:100%;object-fit:cover">' +
-            (it.title ? '<div class="proj-cap">' + escapeHtml(it.title) + "</div>" : "");
-        }
-        t.addEventListener("click", function () { openLb(it); });
-        gal.appendChild(t);
+        body += '<div class="proj-thumb">' + thumbHtml(it) + "</div>";
+      });
+      body += "</div></div>";
+    }
+
+    overlay.querySelector(".proj-head").innerHTML = head;
+    overlay.querySelector(".proj-body").innerHTML = body;
+    overlay.querySelector(".proj-empty").style.display = "none";
+
+    // 绑定画廊点击放大
+    var gal = overlay.querySelector(".proj-gallery");
+    if (gal) {
+      Array.prototype.forEach.call(gal.children, function (t, idx) {
+        t.addEventListener("click", function () { openLb(items[idx]); });
       });
     }
+    // 绘制雷达图（等 DOM 布局完成）
+    var canvas = overlay.querySelector(".proj-radar");
+    if (canvas && pj && pj.chartData) {
+      setTimeout(function () { drawRadar(canvas, pj.chartData, pj.chartLabels || []); }, 60);
+    }
+
     overlay.style.display = "flex";
   }
 
@@ -179,22 +319,16 @@
     Array.prototype.forEach.call(cards, function (card) {
       if (card.querySelector(".proj-view-btn")) return;
       var id = card.getAttribute("data-project");
-      var h3 = card.querySelector(".project-body h3");
-      var p = card.querySelector(".project-body p");
-      var numEl = card.querySelector(".project-num");
-      var title = h3 ? h3.textContent.trim() : ("项目" + id);
-      var desc = p ? p.textContent.trim() : "";
-      var num = numEl ? numEl.textContent.trim() : ("0" + (+id + 1));
       var links = card.querySelector(".project-links") || card.querySelector(".project-body");
       if (!links) return;
       var btn = document.createElement("button");
       btn.type = "button";
       btn.className = "proj-view-btn";
-      btn.textContent = "查看项目作品 →";
+      btn.textContent = "查看完整项目 →";
       btn.addEventListener("click", function (e) {
         e.stopPropagation();
         e.preventDefault();
-        openProject(id, title, num, desc);
+        openProject(id);
       });
       links.appendChild(btn);
     });
@@ -205,7 +339,7 @@
     var grid = document.getElementById("projectsGrid");
     var proj = document.getElementById("page-projects");
 
-    // 点击项目卡：若该项目已有发布作品，直接打开钻取层（覆盖旧弹层）
+    // 点击项目卡：直接打开钻取层（capture 抢在黑盒之前，屏蔽旧弹层）
     function onCardClick(e) {
       var el = e.target;
       var card = null;
@@ -215,20 +349,11 @@
       }
       if (!card) return;
       var id = card.getAttribute("data-project");
-      var M = window.__MANIFEST__;
-      var items = (M && M.slots && M.slots["project-" + id]) || [];
-      if (!items.length) return; // 该项目尚无作品 → 交给旧弹层
       e.stopPropagation();
       e.preventDefault();
-      var h3 = card.querySelector(".project-body h3");
-      var p = card.querySelector(".project-body p");
-      var numEl = card.querySelector(".project-num");
-      openProject(id,
-        h3 ? h3.textContent.trim() : ("项目" + id),
-        numEl ? numEl.textContent.trim() : ("0" + (+id + 1)),
-        p ? p.textContent.trim() : "");
+      openProject(id);
     }
-    if (grid) grid.addEventListener("click", onCardClick, true); // capture：抢在黑盒之前
+    if (grid) grid.addEventListener("click", onCardClick, true); // capture
 
     // 黑盒可能重渲染卡片（childList）或切换显隐（class）→ 重新注入按钮
     if (proj && "MutationObserver" in window) {
