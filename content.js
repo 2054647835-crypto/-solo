@@ -2,7 +2,7 @@
 //  简历「已发布内容」清单
 // ============================================================
 window.__MANIFEST__ = {
-  "avatar": "",
+  "avatar": "assets/avatar/DSC05658_20260810220955.JPG",
   "projects": {
     "0": {
       "time": "2025.05 — 2026.08",
@@ -240,11 +240,6 @@ window.__MANIFEST__ = {
         "src": "assets/ai-video/13430901476358959.mp4",
         "title": "AI生成视频作品",
         "type": "video"
-      },
-      {
-        "src": "assets/ai-video/25年初的AI.mp4",
-        "title": "25年初的AI.mp4",
-        "type": "video"
       }
     ],
     "ai-poster": [
@@ -296,12 +291,8 @@ window.__MANIFEST__ = {
     ],
     "ai-kaogong": [
       {
-        "src": "assets/ai-kaogong/微信图片_20260811134722_10_10.jpg",
-        "title": "考公打卡小程序 · AI Agent开发"
-      },
-      {
-        "src": "assets/ai-kaogong/小程序主页面.jpg",
-        "title": "小程序主页面.jpg",
+        "src": "assets/project-5/小程序主页面.jpg",
+        "title": "考公打卡小程序主页面",
         "type": "image"
       }
     ],
