@@ -2053,9 +2053,12 @@ img {
 }
 
 /* 隐藏项目弹层内的「上传素材」按钮（本地 IndexedDB 上传，已由 upload.html 上传中心替代） */
-#uploadBtn, .upload-btn, [data-folder] { display: none !important; }
-/* 永久隐藏黑盒遗留的项目死弹层（硬编码"企业VI设计"占位，已由 projects.js 干净钻取层替代）[deploy-fix] */
-#projectModal { display: none !important; pointer-events: none !important; }
+      #uploadBtn, .upload-btn, [data-folder] { display: none !important; }
+      /* 永久隐藏黑盒遗留的项目死弹层（硬编码"企业VI设计"占位，已由 projects.js 干净钻取层替代）[deploy-fix] */
+      #projectModal { display: none !important; pointer-events: none !important; }
+      /* 干掉黑盒素材灯箱里的删除按钮 + 空槽位中性占位 [deploy-fix] */
+      .pa-delete { display: none !important; }
+      .manifest-empty { display:flex; align-items:center; justify-content:center; padding:24px; color:#86868b; font-size:.9rem; text-align:center; min-height:120px; border-radius:18px; }
 
 .pa-btn {
   width: 28px;
