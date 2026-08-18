@@ -73,6 +73,12 @@
       avatarEl.style.border = "none";
       avatarEl.style.cursor = "zoom-in";
       avatarEl.title = "头像";
+      // 头像点击 = 仅查看大图（捕获阶段拦截黑盒的上传/裁剪弹层）[deploy-fix]
+      avatarEl.addEventListener("click", function (e) {
+        e.stopPropagation();
+        e.stopImmediatePropagation();
+        openManifestLightbox([{ src: M.avatar, title: "头像", type: "image" }], 0);
+      }, true);
     }
 
     // ---- 作品槽 ----
@@ -80,7 +86,16 @@
     Array.prototype.forEach.call(containers, function (container) {
       var slot = container.getAttribute("data-upload-slot");
       var raw = (M.slots && M.slots[slot]) || [];
-      if (!raw.length) return; // 未发布 → 保留原本地上传行为
+      // 彻底接管：移除 data-upload-slot，黑盒不再对这些槽位绑定删除/上传 [deploy-fix]
+      container.removeAttribute("data-upload-slot");
+
+      if (!raw.length) {
+        // 空槽位：中性占位，不交给黑盒（否则会冒出删除/上传）
+        container.classList.remove("manifest-filled");
+        container.removeAttribute("style");
+        container.innerHTML = '<div class="manifest-empty">该板块暂未上传作品</div>';
+        return;
+      }
 
       var items = raw.map(normalize);
       container.classList.add("manifest-filled");
