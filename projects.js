@@ -385,21 +385,24 @@
     var grid = document.getElementById("projectsGrid");
     var proj = document.getElementById("page-projects");
 
-    // 点击项目卡：直接打开钻取层（capture 抢在黑盒之前，屏蔽旧弹层）
+    // 点击项目卡：直接打开钻取层（document 级 capture，抢在黑盒之前）
+    // 边界用 document.body 而非 #projectsGrid：黑盒可能把卡片移出 grid 容器，
+    // 用 grid 作边界会"找不卡片"而放行黑盒旧弹层（数据优化/VI设计曾因此中招）。
     function onCardClick(e) {
       var el = e.target;
       var card = null;
-      while (el && el !== grid) {
+      while (el && el !== document.body) {
         if (el.classList && el.classList.contains("project-card")) { card = el; break; }
         el = el.parentNode;
       }
       if (!card) return;
       var id = card.getAttribute("data-project");
+      if (id == null) return;
       e.stopPropagation();
       e.preventDefault();
       openProject(id);
     }
-    if (grid) grid.addEventListener("click", onCardClick, true); // capture
+    document.addEventListener("click", onCardClick, true); // capture，全文档拦截项目卡
 
     // 黑盒可能重渲染卡片（childList）或切换显隐（class）→ 重新注入按钮
     if (proj && "MutationObserver" in window) {
