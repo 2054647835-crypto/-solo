@@ -41,6 +41,8 @@
     ".proj-how li{margin:4px 0}",
     ".proj-tags{display:flex;flex-wrap:wrap;gap:8px}",
     ".proj-tag{display:inline-block;padding:5px 12px;border-radius:980px;background:rgba(0,113,227,.08);color:#0071e3;font-size:.82rem;font-weight:500}",
+    ".proj-charts{display:grid;grid-template-columns:repeat(auto-fill,minmax(150px,1fr));gap:10px;margin-top:12px}",
+    ".proj-charts img{width:100%;border-radius:10px;cursor:zoom-in;display:block;border:1px solid rgba(0,0,0,.06)}",
     ".proj-gallery-title{margin:22px 0 12px;font-size:.92rem;font-weight:700;color:#1d1d1f}",
     ".proj-lb{position:fixed;inset:0;z-index:100000;display:none;align-items:center;justify-content:center;background:rgba(0,0,0,.9)}",
     ".proj-lb img,.proj-lb video{max-width:90vw;max-height:85vh;border-radius:14px;box-shadow:0 20px 60px rgba(0,0,0,.5)}",
@@ -138,6 +140,13 @@
       meta.capability.forEach(function (s) { html += '<span class="proj-tag">' + escapeHtml(s) + "</span>"; });
       html += "</div></div>";
     }
+    if (meta.charts && meta.charts.length) {
+      html += '<div class="proj-block"><h3 class="proj-block-title">数据图表</h3><div class="proj-charts">';
+      meta.charts.forEach(function (src) {
+        html += '<img class="proj-chart-img" data-src="' + escapeHtml(src) + '" src="' + escapeHtml(src) + '" alt="数据图表">';
+      });
+      html += "</div></div>";
+    }
     return html;
   }
 
@@ -148,6 +157,11 @@
       '<span class="proj-num">' + escapeHtml(num) + "</span>" +
       "<h2>" + escapeHtml(title) + "</h2>" +
       renderProjectMeta(id, desc);
+    overlay.querySelectorAll(".proj-chart-img").forEach(function (img) {
+      img.addEventListener("click", function () {
+        openLb({ src: img.getAttribute("data-src"), type: "image", title: "" });
+      });
+    });
 
     var galTitle = overlay.querySelector(".proj-gallery-title");
     var gal = overlay.querySelector(".proj-gallery");
