@@ -86,17 +86,37 @@
 
     overlay.querySelector(".proj-close").addEventListener("click", closeOverlay);
     overlay.querySelector(".proj-backdrop").addEventListener("click", closeOverlay);
-    lb.querySelector(".lb-close").addEventListener("click", function () { lb.style.display = "none"; });
-    lb.addEventListener("click", function (e) { if (e.target === lb) lb.style.display = "none"; });
+    lb.querySelector(".lb-close").addEventListener("click", closeLb);
+    lb.addEventListener("click", function (e) { if (e.target === lb) closeLb(); });
     document.addEventListener("keydown", function (e) {
-      if (e.key === "Escape") { closeOverlay(); lb.style.display = "none"; }
+      if (e.key === "Escape") { closeOverlay(); closeLb(); }
     });
   }
 
-  function closeOverlay() { if (overlay) overlay.style.display = "none"; }
+  // 停掉容器内所有 video 并释放 src（关掉弹层后音频不再残留）
+  function stopVideosIn(root) {
+    if (!root) return;
+    root.querySelectorAll("video").forEach(function (v) {
+      try { v.pause(); v.removeAttribute("src"); v.load(); } catch (e) {}
+    });
+  }
+  function closeLb() {
+    if (!lb) return;
+    stopVideosIn(lb);
+    var c = lb.querySelector(".lb-content");
+    if (c) c.innerHTML = ""; // 清空，下次打开重新创建，避免旧视频后台续播
+    lb.style.display = "none";
+  }
+  function closeOverlay() {
+    if (!overlay) return;
+    stopVideosIn(overlay);
+    overlay.style.display = "none";
+    closeLb(); // 关主层时一并关灯箱，彻底停掉音频
+  }
 
   function openProject(id, title, num, desc) {
     if (!overlay) buildOverlay();
+    closeLb(); // 打开新项目前，确保残留的灯箱视频已停
     overlay.querySelector(".proj-head").innerHTML =
       '<span class="proj-num">' + escapeHtml(num) + "</span>" +
       "<h2>" + escapeHtml(title) + "</h2>" +
