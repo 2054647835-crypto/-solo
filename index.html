@@ -494,6 +494,17 @@ img {
 .about-avatar {
   width: 140px;
   height: 140px;
+  border-radius: 50%;
+  overflow: hidden;
+  box-shadow: var(--shadow);
+  border: 1px solid var(--border);
+}
+
+.about-avatar img {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+  display: block;
 }
 
 .avatar-lg {
@@ -771,6 +782,30 @@ img {
   gap: 16px;
 }
 
+.projects-tagline {
+  margin: 40px auto 8px;
+  text-align: center;
+  font-size: 0.95rem;
+  font-weight: 600;
+  letter-spacing: 0.04em;
+  color: var(--text-muted);
+  position: relative;
+  padding-top: 28px;
+}
+
+.projects-tagline::before {
+  content: "";
+  position: absolute;
+  top: 0;
+  left: 50%;
+  transform: translateX(-50%);
+  width: 48px;
+  height: 2px;
+  border-radius: 2px;
+  background: var(--accent, #0071e3);
+  opacity: 0.6;
+}
+
 .project-card {
   background-color: var(--bg-card);
   border-radius: var(--radius);
@@ -976,6 +1011,42 @@ img {
   border: 1px solid var(--border);
   color: var(--text-muted);
   margin-top: 4px;
+}
+
+.contact-qr-wrap {
+  position: relative;
+  display: inline-flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 6px;
+  margin-top: 8px;
+}
+
+.contact-qr-img {
+  width: 120px;
+  height: 120px;
+  object-fit: contain;
+  border-radius: 10px;
+  border: 1px solid var(--border);
+  background: #fff;
+  display: block;
+}
+
+.contact-qr-fallback {
+  display: none;
+  font-size: 0.78rem;
+  color: var(--text-muted);
+  padding: 16px 18px;
+  border: 1px dashed var(--border);
+  border-radius: 10px;
+}
+
+.contact-qr-wrap.qr-empty .contact-qr-img {
+  display: none;
+}
+
+.contact-qr-wrap.qr-empty .contact-qr-fallback {
+  display: block;
 }
 
 /* ========== 页脚 ========== */
@@ -4820,7 +4891,7 @@ img {
           <p class="section-subtitle reveal visible" style="--delay:0.1s">做过不同类型的内容账号，用AI提效，用数据验证</p>
           <div class="about-grid">
             <div class="about-avatar reveal scale-in visible" style="--delay:0.2s">
-              <div class="avatar-placeholder avatar-lg" id="aboutAvatar" title="点击上传头像"><span>＋ 上传头像</span></div>
+              <div class="about-avatar avatar-lg" id="aboutAvatar"><img src="assets/avatar/DSC05658_20260810220955.JPG" alt="张涵"></div>
             </div>
             <div class="about-text reveal visible" style="--delay:0.3s">
               <p class="about-quote">「我来自于多数，但我要成为少数，再去帮助大多数」</p>
@@ -4962,38 +5033,27 @@ img {
               <h4 class="about-helps-title" style="font-size:1rem">我的AI作品</h4>
                             <div class="teaching-works-grid">
                                 <div class="teaching-work slot-container" data-upload-slot="ai-video" data-add-label="上传AI视频" data-slot-title="AI视频" data-slot-desc="AI生成视频作品" style="background: linear-gradient(135deg, #e0f5f0, #d2d2d7);">
-                  <div class="teaching-work-label"><strong>AI视频</strong><span>AI生成视频作品</span><em>点击上传</em></div>
+                  <div class="teaching-work-label"><strong>AI视频</strong><span>AI生成视频作品</span></div>
                 </div>
                 <div class="teaching-work slot-container" data-upload-slot="ai-poster" data-add-label="上传海报" data-slot-title="AI海报设计" data-slot-desc="点击查看多张作品" style="background: linear-gradient(135deg, #e3edff, #d2d2d7);">
-                  <div class="teaching-work-label"><strong>AI海报设计</strong><span>点击查看多张作品</span><em>点击上传</em></div>
+                  <div class="teaching-work-label"><strong>AI海报设计</strong><span>点击查看多张作品</span></div>
                 </div>
                 <div class="teaching-work slot-container" data-upload-slot="ai-kaogong" data-add-label="上传截图" data-slot-title="考公打卡小程序" data-slot-desc="AI Agent开发" style="background: linear-gradient(135deg, #f5e8ff, #e8e8ed);">
-                  <div class="teaching-work-label"><strong>考公打卡小程序</strong><span>AI Agent开发</span><em>点击上传</em></div>
+                  <div class="teaching-work-label"><strong>考公打卡小程序</strong><span>AI Agent开发</span></div>
                 </div>
               </div>
-              <p class="portfolio-tip" style="margin-top:12px">提示：点击作品卡片可上传素材，上传后点击图片可放大、裁剪、删除</p>
+              <p class="portfolio-tip" style="margin-top:12px">提示：点击卡片可查看作品大图</p>
             </div>
             <div class="teaching-portfolio reveal visible" style="--delay:0.6s">
               <h4 class="about-helps-title" style="font-size:1rem">个人照片墙</h4>
               <div class="teaching-works-grid">
                 <div class="teaching-work slot-container" data-upload-slot="photo-wall" data-add-label="上传照片" style="background: linear-gradient(135deg, #eef3ff, #d2d2d7);">
-                  <div class="teaching-work-label"><strong>个人照片</strong><span>点击查看大图</span><em>点击上传</em></div>
+                  <div class="teaching-work-label"><strong>个人照片</strong><span>点击查看大图</span></div>
                 </div>
               </div>
-              <p class="portfolio-tip" style="margin-top:12px">提示：点击卡片上传你的生活照，上传后点击可放大、删除</p>
+              <p class="portfolio-tip" style="margin-top:12px">提示：点击卡片可查看大图</p>
             </div>
 
-            <div class="about-links reveal visible" style="--delay:0.65s">
-              <h3 class="about-helps-title">我的外链作品</h3>
-              <p class="section-subtitle" style="text-align:center;margin-bottom:24px">在各平台发布的作品，点击卡片直达</p>
-              <div class="links-grid">
-                <a class="link-card" href="#" target="_blank" rel="noopener"><span class="link-icon">🎵</span><div class="link-text"><strong>抖音</strong><span>短视频作品集</span></div><span class="link-arrow">↗</span></a>
-                <a class="link-card" href="#" target="_blank" rel="noopener"><span class="link-icon">📕</span><div class="link-text"><strong>小红书</strong><span>图文 / 视频笔记</span></div><span class="link-arrow">↗</span></a>
-                <a class="link-card" href="#" target="_blank" rel="noopener"><span class="link-icon">📺</span><div class="link-text"><strong>B站</strong><span>长视频作品</span></div><span class="link-arrow">↗</span></a>
-                <a class="link-card" href="#" target="_blank" rel="noopener"><span class="link-icon">💬</span><div class="link-text"><strong>视频号</strong><span>微信视频号作品</span></div><span class="link-arrow">↗</span></a>
-              </div>
-              <p class="portfolio-tip" style="margin-top:12px">提示：把上面 href="#" 改成你的主页链接即可（直接改 HTML 文件）</p>
-            </div>
 
             </div>
           </div>
@@ -5007,7 +5067,7 @@ img {
           <h2 class="section-title reveal visible">项目作品</h2>
           <p class="section-subtitle reveal visible" style="--delay:0.1s">点击卡片查看详情、作品集与数据可视化</p>
           <div class="projects-grid" id="projectsGrid"><article class="project-card reveal tilt-card from-left visible" data-project="0" style="--delay: 0.15s;"><div class="project-thumb" style="--g1:#e3edff;--g2:#d2d2d7;"><span class="project-num">01</span><span class="project-thumb-label">B端老板IP</span></div><div class="project-body"><h3>B端老板IP</h3><p>四类内容矩阵，单条最高 40万 播放，故事型视频效率翻倍</p><div class="project-links"><span class="cta-link">查看详情</span></div></div></article><article class="project-card reveal tilt-card from-right visible" data-project="1" style="--delay: 0.25s;"><div class="project-thumb" style="--g1:#f5e8ff;--g2:#e8e8ed;"><span class="project-num">02</span><span class="project-thumb-label">小众宠物IP</span></div><div class="project-body"><h3>小众宠物IP</h3><p>半年自然涨粉 3700+，5条 10W+ 爆款，10条 1W+ 视频</p><div class="project-links"><span class="cta-link">查看详情</span></div></div></article><article class="project-card reveal tilt-card from-left visible" data-project="2" style="--delay: 0.35s;"><div class="project-thumb" style="--g1:#e0f5f0;--g2:#d2d2d7;"><span class="project-num">03</span><span class="project-thumb-label">跨品类脚本</span></div><div class="project-body"><h3>跨品类脚本</h3><p>从宠物品类扩展到台球，独立撰写单条全网 40万 播放</p><div class="project-links"><span class="cta-link">查看详情</span></div></div></article><article class="project-card reveal tilt-card from-right visible" data-project="3" style="--delay: 0.45000000000000007s;"><div class="project-thumb" style="--g1:#fff4e6;--g2:#e8e8ed;"><span class="project-num">04</span><span class="project-thumb-label">数据优化</span></div><div class="project-body"><h3>数据优化</h3><p>用Skill分析12条视频，发现避坑型占比最高、互动率最好</p><div class="project-links"><span class="cta-link">查看详情</span></div></div></article><article class="project-card reveal tilt-card from-left visible" data-project="4" style="--delay: 0.55s;"><div class="project-thumb" style="--g1:#e8e0ff;--g2:#d2d2d7;"><span class="project-num">05</span><span class="project-thumb-label">私域运营</span></div><div class="project-body"><h3>私域运营</h3><p>医护PPT板块，100+ 篇内容，A/B测试优化封面，私域提升 20%</p><div class="project-links"><span class="cta-link">查看详情</span></div></div></article><article class="project-card reveal tilt-card from-right visible" data-project="5" style="--delay: 0.65s;"><div class="project-thumb" style="--g1:#e0f5f0;--g2:#d2d2d7;"><span class="project-num">06</span><span class="project-thumb-label">AI考公打卡小程序</span></div><div class="project-body"><h3>AI考公打卡小程序</h3><p>用AI Agent做的考公打卡小程序，体验版已投入周围人使用</p><div class="project-links"><span class="cta-link">查看详情</span></div></div></article><article class="project-card reveal tilt-card from-left visible" data-project="6" style="--delay: 0.7500000000000001s;"><div class="project-thumb" style="--g1:#fff4e6;--g2:#e8e8ed;"><span class="project-num">07</span><span class="project-thumb-label">企业VI设计</span></div><div class="project-body"><h3>企业VI设计</h3><p>毕业设计 · 企业VI系统设计真实落地并获企业采纳</p><div class="project-links"><span class="cta-link">查看详情</span></div></div></article></div>
-        </div>
+        <p class="projects-tagline">项目不止于此 —— 更多，正在路上。</p>
       </div>
     </section>
 
@@ -5193,12 +5253,12 @@ img {
               <h3 class="contact-block-title">求职 / 项目合作</h3>
               <p class="contact-block-desc">编导岗、新媒体内容策划、剪辑岗，或短视频/IP 项目合作</p>
               <div class="contact-links">
-                <a href="mailto:2054647835@qq.com" class="contact-card tilt-card">
+                <a href="mailto:2054647835@qq.com" class="contact-card">
                   <span class="contact-icon">✉️</span>
                   <span class="contact-label">Email</span>
                   <span class="contact-value">2054647835@qq.com</span>
                 </a>
-                <a href="tel:15826283580" class="contact-card tilt-card">
+                <a href="tel:15826283580" class="contact-card">
                   <span class="contact-icon">📱</span>
                   <span class="contact-label">电话</span>
                   <span class="contact-value">158-2628-3580</span>
@@ -5210,32 +5270,18 @@ img {
               <h3 class="contact-block-title">1V1 教学咨询</h3>
               <p class="contact-block-desc">内容策划、剪辑、AI 数据化内容生产，面向青少年的一对一教学</p>
               <div class="contact-links">
-                <a href="mailto:2054647835@qq.com" class="contact-card tilt-card">
+                <a href="mailto:2054647835@qq.com" class="contact-card">
                   <span class="contact-icon">✉️</span>
                   <span class="contact-label">咨询邮箱</span>
                   <span class="contact-value">2054647835@qq.com</span>
                 </a>
-                <a href="#" class="contact-card tilt-card">
+                <a href="#" class="contact-card">
                   <span class="contact-icon">💬</span>
                   <span class="contact-label">微信</span>
-                  <span class="contact-value">扫码添加（待补充）</span>
-                  <span class="contact-qr-placeholder">
-                    <svg viewBox="0 0 48 48" fill="none" xmlns="http://www.w3.org/2000/svg">
-                      <rect x="2" y="2" rx="2" stroke="currentColor" stroke-width="2" fill="none"></rect>
-                      <rect x="6" y="6" rx="1" fill="currentColor" opacity="0.3"></rect>
-                      <rect x="32" y="2" rx="2" stroke="currentColor" stroke-width="2" fill="none"></rect>
-                      <rect x="36" y="6" rx="1" fill="currentColor" opacity="0.3"></rect>
-                      <rect x="2" y="32" rx="2" stroke="currentColor" stroke-width="2" fill="none"></rect>
-                      <rect x="6" y="36" rx="1" fill="currentColor" opacity="0.3"></rect>
-                      <rect x="20" y="20" fill="currentColor" opacity="0.4"></rect>
-                      <rect x="26" y="20" fill="currentColor" opacity="0.4"></rect>
-                      <rect x="20" y="26" fill="currentColor" opacity="0.4"></rect>
-                      <rect x="26" y="26" fill="currentColor" opacity="0.4"></rect>
-                      <rect x="32" y="32" fill="currentColor" opacity="0.4"></rect>
-                      <rect x="38" y="32" fill="currentColor" opacity="0.4"></rect>
-                      <rect x="32" y="38" fill="currentColor" opacity="0.4"></rect>
-                      <rect x="42" y="42" fill="currentColor" opacity="0.4"></rect>
-                    </svg>
+                  <span class="contact-value">扫码添加微信</span>
+                  <span class="contact-qr-wrap">
+                    <img class="contact-qr-img" src="assets/wechat/微信二维码.jpg" alt="微信二维码" onerror="this.style.display='none';this.parentNode.classList.add('qr-empty')">
+                    <span class="contact-qr-fallback">微信二维码待上传</span>
                   </span>
                 </a>
               </div>
@@ -5300,4 +5346,49 @@ img {
     .manifest-lightbox .ml-caption{position:absolute;bottom:-34px;left:0;right:0;text-align:center;color:#fff;font-size:.9rem}
     @media(max-width:680px){.manifest-lightbox .ml-prev{left:8px}.manifest-lightbox .ml-next{right:8px}.manifest-lightbox .ml-close{top:-40px}}
   </style>
+  <script>
+  // ===== 分栏切换（干净实现，盖在黑盒之上）=====
+  (function () {
+    "use strict";
+    function switchPage(page) {
+      if (!page) return;
+      var pages = document.querySelectorAll(".page");
+      for (var i = 0; i < pages.length; i++) {
+        pages[i].classList.remove("page--active", "page--visible");
+      }
+      var target = document.getElementById("page-" + page);
+      if (target) {
+        target.classList.add("page--active");
+        void target.offsetWidth; // 触发重排，保证过渡动画
+        target.classList.add("page--visible");
+      }
+      var links = document.querySelectorAll(".nav-link");
+      for (var j = 0; j < links.length; j++) {
+        links[j].classList.toggle("active", links[j].getAttribute("data-page") === page);
+      }
+      window.scrollTo(0, 0);
+    }
+    document.addEventListener("click", function (e) {
+      var el = e.target;
+      while (el && el !== document) {
+        if (el.getAttribute && el.getAttribute("data-page")) {
+          e.preventDefault();
+          switchPage(el.getAttribute("data-page"));
+          return;
+        }
+        el = el.parentNode;
+      }
+    });
+    function assertActive() {
+      var active = document.querySelector(".page.page--active") || document.getElementById("page-about");
+      if (active) switchPage(active.id.replace("page-", ""));
+    }
+    if (document.readyState === "loading") {
+      document.addEventListener("DOMContentLoaded", function () { assertActive(); setTimeout(assertActive, 300); });
+    } else {
+      assertActive();
+      setTimeout(assertActive, 300);
+    }
+  })();
+  </script>
 </body></html>

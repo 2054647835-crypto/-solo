@@ -86,6 +86,32 @@
     });
   }
 
+  // 去文件后缀：仅当整段文本是「文件名.扩展名」形态时剥离（不影响正常句子，如 "etc." 不会被误伤）
+  function stripExtText(el) {
+    var t = (el.textContent || "").trim();
+    var m = t.match(/^(\S+)\.([A-Za-z0-9]{2,5})$/);
+    if (m) el.textContent = m[1];
+  }
+  function observeExtStrip() {
+    var sel = '[class*="caption"],[class*="label"],[class*="tip"]';
+    function walk(root) {
+      if (!root || !root.querySelectorAll) return;
+      var nodes = root.querySelectorAll(sel);
+      Array.prototype.forEach.call(nodes, function (n) { stripExtText(n); });
+    }
+    walk(document);
+    if ("MutationObserver" in window) {
+      new MutationObserver(function (muts) {
+        muts.forEach(function (m) {
+          if (m.target && m.target.nodeType === 1) stripExtText(m.target);
+          if (m.addedNodes) Array.prototype.forEach.call(m.addedNodes, function (n) {
+            if (n.nodeType === 1) walk(n);
+          });
+        });
+      }).observe(document.body, { childList: true, subtree: true });
+    }
+  }
+
   var overlay, lb;
 
   function buildOverlay() {
@@ -297,6 +323,22 @@
     overlay.style.display = "flex";
   }
 
+  // 灯箱图片缩放：Ctrl + 滚轮 放大/缩小，单击复位
+  function enableZoom(img) {
+    var scale = 1;
+    img.addEventListener("wheel", function (e) {
+      if (!e.ctrlKey) return; // 仅 Ctrl+滚轮 触发缩放
+      e.preventDefault();
+      var delta = e.deltaY < 0 ? 0.12 : -0.12;
+      scale = Math.min(5, Math.max(0.5, scale + delta));
+      img.style.transform = "scale(" + scale + ")";
+      img.style.cursor = scale > 1 ? "zoom-out" : "zoom-in";
+    }, { passive: false });
+    img.addEventListener("click", function () {
+      if (scale > 1) { scale = 1; img.style.transform = "scale(1)"; img.style.cursor = "zoom-in"; }
+    });
+  }
+
   function openLb(it) {
     var c = lb.querySelector(".lb-content");
     c.innerHTML = "";
@@ -309,7 +351,10 @@
     } else if (it.type === "video") {
       var v2 = document.createElement("video"); v2.controls = true; v2.autoplay = true; v2.src = it.src; v2.style.cssText = "max-width:90vw;max-height:85vh;border-radius:14px"; c.appendChild(v2);
     } else {
-      var im = document.createElement("img"); im.src = it.src; im.alt = it.title || ""; im.style.cssText = "max-width:90vw;max-height:85vh;border-radius:14px"; c.appendChild(im);
+      var im = document.createElement("img"); im.src = it.src; im.alt = it.title || "";
+      im.style.cssText = "max-width:90vw;max-height:85vh;border-radius:14px;transform-origin:center center;transition:transform .08s ease-out;cursor:zoom-in";
+      c.appendChild(im);
+      enableZoom(im);
     }
     lb.style.display = "flex";
   }
@@ -335,6 +380,7 @@
   }
 
   function init() {
+    observeExtStrip();
     injectButtons();
     var grid = document.getElementById("projectsGrid");
     var proj = document.getElementById("page-projects");
