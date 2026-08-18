@@ -34,16 +34,6 @@
     ".proj-cap{position:absolute;left:0;right:0;bottom:0;padding:8px 10px;font-size:.8rem;color:#fff;",
     "background:linear-gradient(transparent,rgba(0,0,0,.6))}",
     ".proj-empty{color:#6e6e73;font-size:.95rem;padding:24px 0}",
-    ".proj-summary{margin:0 0 18px;color:#1d1d1f;font-size:1rem;line-height:1.7;max-width:62ch}",
-    ".proj-block{margin:18px 0}",
-    ".proj-block-title{margin:0 0 10px;font-size:.92rem;font-weight:700;color:#0071e3;letter-spacing:.02em}",
-    ".proj-how{margin:0;padding-left:20px;color:#1d1d1f;font-size:.95rem;line-height:1.85}",
-    ".proj-how li{margin:4px 0}",
-    ".proj-tags{display:flex;flex-wrap:wrap;gap:8px}",
-    ".proj-tag{display:inline-block;padding:5px 12px;border-radius:980px;background:rgba(0,113,227,.08);color:#0071e3;font-size:.82rem;font-weight:500}",
-    ".proj-charts{display:grid;grid-template-columns:repeat(auto-fill,minmax(150px,1fr));gap:10px;margin-top:12px}",
-    ".proj-charts img{width:100%;border-radius:10px;cursor:zoom-in;display:block;border:1px solid rgba(0,0,0,.06)}",
-    ".proj-gallery-title{margin:22px 0 12px;font-size:.92rem;font-weight:700;color:#1d1d1f}",
     ".proj-lb{position:fixed;inset:0;z-index:100000;display:none;align-items:center;justify-content:center;background:rgba(0,0,0,.9)}",
     ".proj-lb img,.proj-lb video{max-width:90vw;max-height:85vh;border-radius:14px;box-shadow:0 20px 60px rgba(0,0,0,.5)}",
     ".proj-lb .lb-close{position:absolute;top:20px;right:24px;color:#fff;font-size:32px;background:none;border:none;cursor:pointer}"
@@ -85,7 +75,7 @@
     overlay.innerHTML =
       '<div class="proj-backdrop"></div>' +
       '<div class="proj-panel"><button class="proj-close" aria-label="关闭">×</button>' +
-      '<div class="proj-head"></div><h3 class="proj-gallery-title">作品集</h3><div class="proj-gallery"></div>' +
+      '<div class="proj-head"></div><div class="proj-gallery"></div>' +
       '<p class="proj-empty" style="display:none">该项目暂未上传作品。打开上传页 → 选「项目素材」→ 选对应项目即可添加。</p></div>';
     document.body.appendChild(overlay);
 
@@ -124,46 +114,14 @@
     closeLb(); // 关主层时一并关灯箱，彻底停掉音频
   }
 
-  function renderProjectMeta(id, desc) {
-    var M = window.__MANIFEST__;
-    var meta = (M && M.projects && M.projects[id]) || {};
-    var html = "";
-    var summary = meta.summary || desc || "";
-    if (summary) html += '<p class="proj-summary">' + escapeHtml(summary) + "</p>";
-    if (meta.how && meta.how.length) {
-      html += '<div class="proj-block"><h3 class="proj-block-title">我是怎么做的</h3><ul class="proj-how">';
-      meta.how.forEach(function (s) { html += "<li>" + escapeHtml(s) + "</li>"; });
-      html += "</ul></div>";
-    }
-    if (meta.capability && meta.capability.length) {
-      html += '<div class="proj-block"><h3 class="proj-block-title">能力维度分析</h3><div class="proj-tags">';
-      meta.capability.forEach(function (s) { html += '<span class="proj-tag">' + escapeHtml(s) + "</span>"; });
-      html += "</div></div>";
-    }
-    if (meta.charts && meta.charts.length) {
-      html += '<div class="proj-block"><h3 class="proj-block-title">数据图表</h3><div class="proj-charts">';
-      meta.charts.forEach(function (src) {
-        html += '<img class="proj-chart-img" data-src="' + escapeHtml(src) + '" src="' + escapeHtml(src) + '" alt="数据图表">';
-      });
-      html += "</div></div>";
-    }
-    return html;
-  }
-
   function openProject(id, title, num, desc) {
     if (!overlay) buildOverlay();
     closeLb(); // 打开新项目前，确保残留的灯箱视频已停
     overlay.querySelector(".proj-head").innerHTML =
       '<span class="proj-num">' + escapeHtml(num) + "</span>" +
       "<h2>" + escapeHtml(title) + "</h2>" +
-      renderProjectMeta(id, desc);
-    overlay.querySelectorAll(".proj-chart-img").forEach(function (img) {
-      img.addEventListener("click", function () {
-        openLb({ src: img.getAttribute("data-src"), type: "image", title: "" });
-      });
-    });
+      "<p>" + escapeHtml(desc) + "</p>";
 
-    var galTitle = overlay.querySelector(".proj-gallery-title");
     var gal = overlay.querySelector(".proj-gallery");
     var empty = overlay.querySelector(".proj-empty");
     var M = window.__MANIFEST__;
@@ -173,10 +131,8 @@
     gal.innerHTML = "";
     if (!items.length) {
       empty.style.display = "block";
-      if (galTitle) galTitle.style.display = "none";
     } else {
       empty.style.display = "none";
-      if (galTitle) galTitle.style.display = "block";
       items.forEach(function (it) {
         var t = document.createElement("div");
         t.className = "proj-thumb";
