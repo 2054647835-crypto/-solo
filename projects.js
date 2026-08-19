@@ -412,35 +412,12 @@
     });
   }
 
-  function paintCardThumbs() {
-    var M = window.__MANIFEST__;
-    if (!M || !M.slots) return;
-    var cards = document.querySelectorAll('article.project-card[data-project]');
-    Array.prototype.forEach.call(cards, function (card) {
-      var id = card.getAttribute('data-project');
-      var items = (M.slots && M.slots["project-" + id]) || [];
-      var first = null;
-      for (var i = 0; i < items.length; i++) {
-        var s = (items[i].src || "").toLowerCase();
-        if (items[i].type === "video" || /\.(mp4|webm|ogg|mov)(\?|$)/.test(s)) continue;
-        first = items[i]; break;
-      }
-      if (!first || !first.src) return;
-      var thumb = card.querySelector(".project-thumb");
-      if (!thumb || thumb.querySelector("img.card-work-thumb")) return;
-      var img = document.createElement("img");
-      img.className = "card-work-thumb";
-      img.src = first.src;
-      img.alt = first.title || "";
-      img.loading = "eager";
-      thumb.appendChild(img);
-    });
-  }
+  // paintCardThumbs 已移除：项目卡恢复为原版渐变色块（不再用图片盖住色块）
+  // 用户明确要求：项目卡本来就是色块，点开才看作品，卡片上不要显示缩略图。
 
   function init() {
     observeExtStrip();
     injectButtons();
-    paintCardThumbs();
     var grid = document.getElementById("projectsGrid");
     var proj = document.getElementById("page-projects");
 
