@@ -55,7 +55,9 @@
     ".proj-lb{position:fixed;inset:0;z-index:100000;display:none;align-items:center;justify-content:center;background:rgba(0,0,0,.9)}",
     ".proj-lb img,.proj-lb video{max-width:90vw;max-height:85vh;border-radius:14px;box-shadow:0 20px 60px rgba(0,0,0,.5)}",
     ".proj-lb .lb-close{position:absolute;top:20px;right:24px;color:#fff;font-size:32px;background:none;border:none;cursor:pointer}",
-    "@media (max-width:560px){.proj-panel{padding:26px 18px 22px}.proj-head h2{font-size:1.4rem}}"
+    "@media (max-width:560px){.proj-panel{padding:26px 18px 22px}.proj-head h2{font-size:1.4rem}}",
+    ".card-work-thumb{position:absolute;inset:0;width:100%;height:100%;object-fit:cover;border-radius:inherit;z-index:0}",
+    "[data-project] .project-num,[data-project] .project-thumb-label{position:relative;z-index:1;text-shadow:0 1px 3px rgba(0,0,0,.45)}"
   ].join("");
   document.head.appendChild(style);
 
@@ -320,6 +322,31 @@
       setTimeout(function () { drawRadar(canvas, pj.chartData, pj.chartLabels || []); }, 60);
     }
 
+    // 安全网：400ms 后若作品集被其他代码覆盖/丢失，用 createElement 重新注入
+    if (items.length) {
+      (function (itemsSnap) {
+        setTimeout(function () {
+          try {
+            var gal = overlay.querySelector(".proj-gallery");
+            var body = overlay.querySelector(".proj-body");
+            if (gal && gal.querySelectorAll(".proj-thumb").length > 0) return;
+            var sec = document.createElement("div");
+            sec.className = "proj-section";
+            var h = document.createElement("h4"); h.textContent = "作品集"; sec.appendChild(h);
+            var g = document.createElement("div"); g.className = "proj-gallery";
+            itemsSnap.forEach(function (it) {
+              var t = document.createElement("div"); t.className = "proj-thumb";
+              t.innerHTML = thumbHtml(it);
+              t.addEventListener("click", function () { openLb(it); });
+              g.appendChild(t);
+            });
+            sec.appendChild(g);
+            if (body) body.appendChild(sec);
+          } catch (e) { /* 安全网自身失败也吞掉，不影响主流程 */ }
+        }, 400);
+      })(items);
+    }
+
     overlay.style.display = "flex";
   }
 
@@ -379,9 +406,30 @@
     });
   }
 
+  function paintCardThumbs() {
+    var M = window.__MANIFEST__;
+    if (!M || !M.slots) return;
+    var cards = document.querySelectorAll('article.project-card[data-project]');
+    Array.prototype.forEach.call(cards, function (card) {
+      var id = card.getAttribute('data-project');
+      var items = (M.slots && M.slots["project-" + id]) || [];
+      var first = items[0];
+      if (!first || !first.src) return;
+      var thumb = card.querySelector(".project-thumb");
+      if (!thumb || thumb.querySelector("img.card-work-thumb")) return;
+      var img = document.createElement("img");
+      img.className = "card-work-thumb";
+      img.src = first.src;
+      img.alt = first.title || "";
+      img.loading = "lazy";
+      thumb.appendChild(img);
+    });
+  }
+
   function init() {
     observeExtStrip();
     injectButtons();
+    paintCardThumbs();
     var grid = document.getElementById("projectsGrid");
     var proj = document.getElementById("page-projects");
 
