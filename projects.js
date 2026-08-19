@@ -90,6 +90,8 @@
 
   // 去文件后缀：仅当整段文本是「文件名.扩展名」形态时剥离（不影响正常句子，如 "etc." 不会被误伤）
   function stripExtText(el) {
+    // 弹层内的富 HTML 绝不能碰（否则会被拍平成纯文本），直接跳过
+    if (el.closest && el.closest('.proj-overlay')) return;
     var t = (el.textContent || "").trim();
     var m = t.match(/^(\S+)\.([A-Za-z0-9]{2,5})$/);
     if (m) el.textContent = m[1];
@@ -98,6 +100,8 @@
     var sel = '[class*="caption"],[class*="label"],[class*="tip"]';
     function walk(root) {
       if (!root || !root.querySelectorAll) return;
+      // 弹层子树整体跳过，避免把作品集画廊拍平成文本
+      if (root.closest && root.closest('.proj-overlay')) return;
       var nodes = root.querySelectorAll(sel);
       Array.prototype.forEach.call(nodes, function (n) { stripExtText(n); });
     }
@@ -105,6 +109,8 @@
     if ("MutationObserver" in window) {
       new MutationObserver(function (muts) {
         muts.forEach(function (m) {
+          // 弹层内的变动一律忽略
+          if (m.target && m.target.closest && m.target.closest('.proj-overlay')) return;
           if (m.target && m.target.nodeType === 1) stripExtText(m.target);
           if (m.addedNodes) Array.prototype.forEach.call(m.addedNodes, function (n) {
             if (n.nodeType === 1) walk(n);
@@ -426,7 +432,7 @@
       img.className = "card-work-thumb";
       img.src = first.src;
       img.alt = first.title || "";
-      img.loading = "lazy";
+      img.loading = "eager";
       thumb.appendChild(img);
     });
   }
