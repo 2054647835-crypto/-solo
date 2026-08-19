@@ -413,7 +413,12 @@
     Array.prototype.forEach.call(cards, function (card) {
       var id = card.getAttribute('data-project');
       var items = (M.slots && M.slots["project-" + id]) || [];
-      var first = items[0];
+      var first = null;
+      for (var i = 0; i < items.length; i++) {
+        var s = (items[i].src || "").toLowerCase();
+        if (items[i].type === "video" || /\.(mp4|webm|ogg|mov)(\?|$)/.test(s)) continue;
+        first = items[i]; break;
+      }
       if (!first || !first.src) return;
       var thumb = card.querySelector(".project-thumb");
       if (!thumb || thumb.querySelector("img.card-work-thumb")) return;
