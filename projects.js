@@ -12,10 +12,6 @@
   // ---------- 注入样式（一次）----------
   var style = document.createElement("style");
   style.textContent = [
-    ".proj-view-btn{display:inline-block;margin-top:12px;padding:8px 16px;border:1px solid rgba(0,113,227,.45);",
-    "border-radius:980px;background:rgba(0,113,227,.08);color:#0071e3;font-size:.85rem;font-weight:500;",
-    "cursor:pointer;font-family:inherit;transition:background .2s}",
-    ".proj-view-btn:hover{background:rgba(0,113,227,.16)}",
     ".proj-overlay{position:fixed;inset:0;z-index:99999;display:none;align-items:center;justify-content:center;",
     "padding:40px 16px;overflow:auto;font-family:-apple-system,BlinkMacSystemFont,'Segoe UI','PingFang SC','Microsoft YaHei',sans-serif}",
     ".proj-overlay .proj-backdrop{position:fixed;inset:0;background:rgba(0,0,0,.55);backdrop-filter:blur(6px)}",
@@ -356,20 +352,64 @@
     overlay.style.display = "flex";
   }
 
-  // 灯箱图片缩放：Ctrl + 滚轮 放大/缩小，单击复位
+  // 灯箱图片缩放与平移：Ctrl+滚轮 缩放；放大后可【滚轮上下 / 鼠标拖拽 / 触摸】平移，单击(未拖动)/双击 复位
   function enableZoom(img) {
-    var scale = 1;
+    var scale = 1, tx = 0, ty = 0, moved = 0;
+    function apply() { img.style.transform = "translate(" + tx + "px," + ty + "px) scale(" + scale + ")"; }
+    function reset() { scale = 1; tx = 0; ty = 0; apply(); img.style.cursor = "zoom-in"; }
     img.addEventListener("wheel", function (e) {
-      if (!e.ctrlKey) return; // 仅 Ctrl+滚轮 触发缩放
+      if (!e.ctrlKey) {
+        if (scale > 1) { e.preventDefault(); ty -= e.deltaY * 0.6; apply(); } // 放大后滚轮上下平移
+        return;
+      }
       e.preventDefault();
       var delta = e.deltaY < 0 ? 0.12 : -0.12;
       scale = Math.min(5, Math.max(0.5, scale + delta));
-      img.style.transform = "scale(" + scale + ")";
-      img.style.cursor = scale > 1 ? "zoom-out" : "zoom-in";
+      if (scale === 1) { tx = 0; ty = 0; }
+      apply();
+      img.style.cursor = scale > 1 ? "grab" : "zoom-in";
     }, { passive: false });
-    img.addEventListener("click", function () {
-      if (scale > 1) { scale = 1; img.style.transform = "scale(1)"; img.style.cursor = "zoom-in"; }
+    // 鼠标拖拽平移
+    var dragging = false, lastX = 0, lastY = 0;
+    img.addEventListener("mousedown", function (e) {
+      if (scale <= 1) return;
+      e.preventDefault();
+      dragging = true; moved = 0; lastX = e.clientX; lastY = e.clientY;
+      img.style.transition = "none";
+      img.style.cursor = "grabbing";
     });
+    window.addEventListener("mousemove", function (e) {
+      if (!dragging) return;
+      var dx = e.clientX - lastX, dy = e.clientY - lastY;
+      moved += Math.abs(dx) + Math.abs(dy);
+      lastX = e.clientX; lastY = e.clientY;
+      tx += dx; ty += dy; apply();
+    });
+    window.addEventListener("mouseup", function () {
+      if (!dragging) return;
+      dragging = false;
+      img.style.transition = "transform .08s ease-out";
+      img.style.cursor = "grab";
+    });
+    // 触摸平移
+    var t0 = null;
+    img.addEventListener("touchstart", function (e) {
+      if (scale <= 1) return;
+      t0 = { x: e.touches[0].clientX, y: e.touches[0].clientY, tx: tx, ty: ty };
+    }, { passive: true });
+    img.addEventListener("touchmove", function (e) {
+      if (!t0) return;
+      e.preventDefault();
+      tx = t0.tx + (e.touches[0].clientX - t0.x);
+      ty = t0.ty + (e.touches[0].clientY - t0.y);
+      apply();
+    }, { passive: false });
+    img.addEventListener("touchend", function () { t0 = null; });
+    // 单击复位（排除拖拽后的误触），双击复位
+    img.addEventListener("click", function () {
+      if (scale > 1 && moved < 6) reset();
+    });
+    img.addEventListener("dblclick", reset);
   }
 
   function openLb(it) {
@@ -392,32 +432,11 @@
     lb.style.display = "flex";
   }
 
-  function injectButtons() {
-    var cards = document.querySelectorAll("article.project-card[data-project]");
-    Array.prototype.forEach.call(cards, function (card) {
-      if (card.querySelector(".proj-view-btn")) return;
-      var id = card.getAttribute("data-project");
-      var links = card.querySelector(".project-links") || card.querySelector(".project-body");
-      if (!links) return;
-      var btn = document.createElement("button");
-      btn.type = "button";
-      btn.className = "proj-view-btn";
-      btn.textContent = "查看完整项目 →";
-      btn.addEventListener("click", function (e) {
-        e.stopPropagation();
-        e.preventDefault();
-        openProject(id);
-      });
-      links.appendChild(btn);
-    });
-  }
-
   // paintCardThumbs 已移除：项目卡恢复为原版渐变色块（不再用图片盖住色块）
   // 用户明确要求：项目卡本来就是色块，点开才看作品，卡片上不要显示缩略图。
 
   function init() {
     observeExtStrip();
-    injectButtons();
     var grid = document.getElementById("projectsGrid");
     var proj = document.getElementById("page-projects");
 
@@ -440,14 +459,7 @@
     }
     document.addEventListener("click", onCardClick, true); // capture，全文档拦截项目卡
 
-    // 黑盒可能重渲染卡片（childList）或切换显隐（class）→ 重新注入按钮
-    if (proj && "MutationObserver" in window) {
-      new MutationObserver(function () { injectButtons(); }).observe(proj, {
-        childList: true, subtree: true, attributes: true, attributeFilter: ["class"]
-      });
-    }
-    // 多重兜底，压过黑盒的初次 / 延迟渲染
-    [120, 400, 900, 1600].forEach(function (t) { setTimeout(injectButtons, t); });
+    // （原「重新注入按钮」逻辑随 injectButtons 一并移除：卡片保留原版「查看详情」，不再有重复按钮）
   }
 
   if (document.readyState === "loading") {
