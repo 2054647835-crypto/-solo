@@ -419,11 +419,6 @@ window.__MANIFEST__ = {
     ],
     "project-5": [
       {
-        "src": "assets/ai-kaogong/微信图片_20260811134722_10_10.jpg",
-        "title": "考公打卡小程序 · AI Agent开发",
-        "type": "image"
-      },
-      {
         "src": "assets/project-5/小程序主页面.jpg",
         "title": "小程序主页面.jpg",
         "type": "image"
